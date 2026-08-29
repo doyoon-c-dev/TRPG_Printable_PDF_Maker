@@ -1,5 +1,6 @@
 import { Box, HStack, Heading, Text } from "@chakra-ui/react";
 
+//패이지 이동
 const onClickCard = (cardNumber: number) => {
   switch (cardNumber) {
     case 1:
@@ -15,6 +16,7 @@ export default function Home() {
   return (
     <Box p={6}>
       <HStack gap={6} justifyContent="center">
+        {/* Making Maps */}
         <Box
           as="button"
           onClick={() => onClickCard(1)}
@@ -30,6 +32,7 @@ export default function Home() {
           </Text>
         </Box>
 
+        {/* Making Tokens */}
         <Box
           as="button"
           onClick={() => onClickCard(2)}

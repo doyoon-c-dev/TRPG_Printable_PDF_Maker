@@ -1,14 +1,16 @@
 import { Box, Spinner, Text, VStack } from "@chakra-ui/react";
-import { usePdfContext } from "../hooks/usePdfContext";
+import { usePdfContext } from "@/components/hooks/usePdfContext";
 
+//로딩 오버레이
+//로딩 중일 때 화면을 가림
 export function LoadingOverlay() {
-    
+
     const { isLoading, loadingMessage } = usePdfContext();
 
-    if (!isLoading) {
-        return null;
-    }
+    //로딩 중이 아니면 null 반환
+    if (!isLoading) return null;
 
+    //로딩 중일 때 화면을 가림
     return (
         <Box
             position="fixed"

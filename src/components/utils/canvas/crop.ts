@@ -1,14 +1,12 @@
 
 interface CropOptions {
-
     sourceX: number;
     sourceY: number;
     sourceWidth: number;
     sourceHeight: number;
-
 }
 
-export function crop( sourceCanvas : HTMLCanvasElement | HTMLImageElement, options : CropOptions ) : HTMLCanvasElement {
+export function crop(sourceCanvas: HTMLCanvasElement | HTMLImageElement, options: CropOptions): HTMLCanvasElement {
 
     const canvas = document.createElement("canvas");
 
@@ -17,9 +15,7 @@ export function crop( sourceCanvas : HTMLCanvasElement | HTMLImageElement, optio
 
     const ctx = canvas.getContext("2d");
 
-    if (!ctx) {
-        throw new Error("Canvas Context를 생성할 수 없습니다.");
-    }
+    if (!ctx) throw new Error("Canvas Context를 생성할 수 없습니다.");
 
     ctx.drawImage(
         sourceCanvas,
@@ -32,7 +28,7 @@ export function crop( sourceCanvas : HTMLCanvasElement | HTMLImageElement, optio
 
         0,
         0,
-        
+
 
         //새 캔버스에서 그릴 크기
         options.sourceWidth,

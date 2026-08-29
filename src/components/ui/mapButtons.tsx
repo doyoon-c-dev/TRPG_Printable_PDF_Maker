@@ -1,28 +1,35 @@
 import { Box, Text, Grid, GridItem, HStack, Button, Field, InputGroup, NumberInput, Switch, ColorPicker, parseColor, Portal } from "@chakra-ui/react";
-import type { CanvasSettings } from "../context/canvasContext";
-import { useCanvasContext } from "../hooks/useCanvasContext";
-import { usePdfContext } from "../hooks/usePdfContext";
-import { mmToPx, pxToMm } from "../utils/canvas/unit";
+import type { CanvasSettings } from "@/components/context/canvasContext";
+import { useCanvasContext } from "@/components/hooks/useCanvasContext";
+import { usePdfContext } from "@/components/hooks/usePdfContext";
+import { mmToPx, pxToMm } from "@/components/utils/canvas/unit";
 import { LuArrowRightLeft } from "react-icons/lu";
 
 
 export const MapButtons = () => {
 
-    const { canvasSettings, setCanvasSettings } = useCanvasContext();
+    //context에서 가져오기
+    const { canvasSettings, setCanvasSettings, isResizingGrid, setIsResizingGrid } = useCanvasContext();
     const { addPdf, isLoading } = usePdfContext();
-    
 
-    const handleValueChange = <K extends keyof CanvasSettings>(key : K, value: CanvasSettings[K]) => {
-        setCanvasSettings(prev => ({...prev, [key]:value}));
+    //값 변경 함수
+    //K는 keyof CanvasSettings의 타입
+    //value는 CanvasSettings[K]의 타입
+    const handleValueChange = <K extends keyof CanvasSettings>(key: K, value: CanvasSettings[K]) => {
+        setCanvasSettings(prev => ({ ...prev, [key]: value }));
     };
 
+    //숫자 입력 컴포넌트
+    //K는 keyof CanvasSettings의 타입
+    //value는 CanvasSettings[K]의 타입
     const numberInput = <K extends keyof CanvasSettings>(
         field: K,
         value: CanvasSettings[K],
         min: number,
         max: number,
-        step : number,
+        step: number,
     ) => (
+
         <NumberInput.Root
             value={String(value)}
             width="200px"
@@ -50,6 +57,8 @@ export const MapButtons = () => {
         </NumberInput.Root>
     );
 
+    //필드 컴포넌트
+    //control에는 numberInput이 들어감
     const field = (label: string, control: React.ReactNode) => (
         <Field.Root width="auto">
             <Field.Label>{label}</Field.Label>
@@ -57,23 +66,27 @@ export const MapButtons = () => {
         </Field.Root>
     );
 
+    //단위 변경 함수
+    //isPx가 true이면 mm -> px, false이면 px -> mm
+    //isPx가 변경되면 모든 숫자 값을 변환
     const handleIsPxCange = () => {
         const isPx = !canvasSettings.isPx;
-        const change = (value: number) => isPx ? Math.round(mmToPx(value, 300)) : Math.round(pxToMm(value,300)*10)/10;
-        setCanvasSettings((prev)=> ({...prev,
-            marginTop : change(prev.marginTop),
-            marginBottom : change(prev.marginBottom),
-            marginLeft : change(prev.marginLeft),
+        const change = (value: number) => isPx ? Math.round(mmToPx(value, 300)) : Math.round(pxToMm(value, 300) * 10) / 10;
+        setCanvasSettings((prev) => ({
+            ...prev,
+            marginTop: change(prev.marginTop),
+            marginBottom: change(prev.marginBottom),
+            marginLeft: change(prev.marginLeft),
             marginRight: change(prev.marginRight),
-            paperWidth : change(prev.paperWidth),
-            paperHeight : change(prev.paperHeight),
-            gridSize : change(prev.gridSize),
-            isPx : isPx
+            paperWidth: change(prev.paperWidth),
+            paperHeight: change(prev.paperHeight),
+            gridSize: change(prev.gridSize),
+            isPx: isPx
         }));
     }
 
     return (
-        <Box display="flex" justifyContent="center" alignItems="flex-start" gap={4} ml={20}>
+        <Box display="flex" justifyContent="center" alignItems="flex-start" width="30%">
             <Grid
                 templateColumns="repeat(2, 1fr)"
                 gap={4}
@@ -95,7 +108,7 @@ export const MapButtons = () => {
                 {field("Left", numberInput("marginLeft", canvasSettings.marginLeft, 0, canvasSettings.isPx ? 1000 : 50, canvasSettings.isPx ? 1 : 0.1))}
 
                 {/* Paper */}
-                <GridItem colSpan={2} mt={10}>
+                <GridItem colSpan={2} mt={5}>
                     <Text fontWeight="bold">
                         Paper
                     </Text>
@@ -106,7 +119,7 @@ export const MapButtons = () => {
                 {field("Height", numberInput("paperHeight", canvasSettings.paperHeight, 1, canvasSettings.isPx ? 10000 : 500, canvasSettings.isPx ? 1 : 0.1))}
 
                 {/* Grid */}
-                <GridItem colSpan={2} mt={10}>
+                <GridItem colSpan={2} mt={5}>
                     <Text fontWeight="bold">
                         Grid
                     </Text>
@@ -123,16 +136,16 @@ export const MapButtons = () => {
                     </Switch.Root>
                 </Field.Root>
 
-                {field("Grid Size", numberInput("gridSize", canvasSettings.gridSize, 1, canvasSettings.isPx ? 1000 : 50, canvasSettings.isPx ? 1 : 0.1 ))}
+                {field("Grid Size", numberInput("gridSize", canvasSettings.gridSize, 1, canvasSettings.isPx ? 1000 : 50, canvasSettings.isPx ? 1 : 0.1))}
 
                 <Field.Root width="auto">
                     <Field.Label>Pen Color</Field.Label>
-                    <ColorPicker.Root 
+                    <ColorPicker.Root
                         width="auto"
                         defaultValue={parseColor(canvasSettings.gridPenColor)}
                         size="sm"
-                        onValueChange={(e)=>handleValueChange("gridPenColor", e.valueAsString)}
-                        >
+                        onValueChange={(e) => handleValueChange("gridPenColor", e.valueAsString)}
+                    >
                         <ColorPicker.HiddenInput />
                         <ColorPicker.Control>
                             <ColorPicker.Input />
@@ -141,42 +154,56 @@ export const MapButtons = () => {
                         <Portal>
                             <ColorPicker.Positioner>
                                 <ColorPicker.Content>
-                                <ColorPicker.Area />
-                                <HStack>
-                                    <ColorPicker.EyeDropper size="xs" variant="outline" />
-                                    <ColorPicker.Sliders />
-                                </HStack>
+                                    <ColorPicker.Area />
+                                    <HStack>
+                                        <ColorPicker.EyeDropper size="xs" variant="outline" />
+                                        <ColorPicker.Sliders />
+                                    </HStack>
                                 </ColorPicker.Content>
                             </ColorPicker.Positioner>
                         </Portal>
                     </ColorPicker.Root>
-                        
+
                 </Field.Root>
 
                 {field("Pen Size(px)", numberInput("gridPenSize", canvasSettings.gridPenSize, 1, 30, 1))}
 
                 {/* 단위 */}
-                <GridItem colSpan={2} mt={10}>
-                    <HStack gap={3}>
-                        <Text>mm</Text>
-                        <Switch.Root
-                            checked={canvasSettings.isPx}
-                            onCheckedChange={handleIsPxCange}
-                        >
-                            <Switch.HiddenInput />
-                            <Switch.Control />
-                        </Switch.Root>
-                        <Text>px</Text>
-                    </HStack>
-                    {field("Scale", numberInput("scale", canvasSettings.scale, 1, 1000, 1))}
+                <GridItem colSpan={2} mt={5}>
+                    <Text fontWeight="bold">
+                        Unit
+                    </Text>
                 </GridItem>
-                <GridItem colSpan={2} mt={10}>
-                    <Button
-                        onClick = {addPdf}
-                        disabled={isLoading}>
-                        add pdf
-                    </Button>
-                </GridItem>
+                <HStack gap={3}>
+                    <Text>mm</Text>
+                    <Switch.Root
+                        checked={canvasSettings.isPx}
+                        onCheckedChange={handleIsPxCange}
+                    >
+                        <Switch.HiddenInput />
+                        <Switch.Control />
+                    </Switch.Root>
+                    <Text>px</Text>
+                </HStack>
+
+                {/* Scale */}
+                {field("Scale", numberInput("scale", canvasSettings.scale, 1, 1000, 1))}
+
+                {/* Custom Grid */}
+                <Button
+                    type="button"
+                    onClick={() => setIsResizingGrid(true)}
+                    disabled={isResizingGrid}
+                >
+                    Custom Grid
+                </Button>
+
+                {/* Add PDF */}
+                <Button
+                    onClick={addPdf}
+                    disabled={isLoading}>
+                    add pdf
+                </Button>
             </Grid>
         </Box>
     );

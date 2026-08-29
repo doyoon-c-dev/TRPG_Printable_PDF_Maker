@@ -1,13 +1,5 @@
-// components/canvas/GridCanvas.tsx
-
-import {
-    useEffect,
-    useRef,
-} from "react";
-
-import {
-    drawGrid
-} from "@/components/utils/canvas/drawGrid";
+import { useEffect, useRef } from "react";
+import { drawGrid } from "@/components/utils/canvas/drawGrid";
 
 interface GridCanvasProps {
     width: number;
@@ -18,46 +10,24 @@ interface GridCanvasProps {
     gridPenSize: number;
 }
 
-export function GridCanvas({
-    width,
-    height,
-    gridSize,
-    gridPenColor,
-    gridPenSize
-}: GridCanvasProps) {
+export function GridCanvas({ width, height, gridSize, gridPenColor, gridPenSize }: GridCanvasProps) {
 
-    const canvasRef =
-        useRef<HTMLCanvasElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
-        const canvas =
-            canvasRef.current;
+        const canvas = canvasRef.current;
 
         if (!canvas) return;
-
-        const ctx =
-            canvas.getContext("2d");
-
+        const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
+        //캔버스 초기화
         ctx.clearRect(0, 0, width, height);
 
-        drawGrid({
-            ctx,
-            width,
-            height,
-            gridSize,
-            gridPenColor,
-            gridPenSize
-        });
+        //그리드 그리기
+        drawGrid({ ctx, width, height, gridSize, gridPenColor, gridPenSize });
 
-    }, [
-        width,
-        height,
-        gridSize,
-        gridPenColor,
-        gridPenSize
-    ]);
+    }, [width, height, gridSize, gridPenColor, gridPenSize]);
 
     return (
         <canvas

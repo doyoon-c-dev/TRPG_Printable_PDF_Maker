@@ -7,7 +7,7 @@ export interface SplitPagesOptions {
     printableWidth: number;
     printableHeight: number;
 
-    isGrid : boolean;
+    isGrid: boolean;
 }
 
 export interface SplitPages {
@@ -32,7 +32,7 @@ export function splitPages({
     if (
         imageWidth <= 0 ||
         imageHeight <= 0 ||
-        ( isGrid && gridSize <= 0) ||
+        (isGrid && gridSize <= 0) ||
         printableWidth <= 0 ||
         printableHeight <= 0
     ) {
@@ -46,60 +46,34 @@ export function splitPages({
     let pagesX: number;
     let pagesY: number;
 
-    if(isGrid){
-        /*
-        * 한 페이지에 들어갈 grid cell 수
-        */
-        const cellsPerPageX = Math.floor(
-            printableWidth / gridSize
-        );
+    if (isGrid) {
+        //한 페이지에 들어갈 grid cell 수
+        const cellsPerPageX = Math.floor(printableWidth / gridSize);
+        const cellsPerPageY = Math.floor(printableHeight / gridSize);
 
-        const cellsPerPageY = Math.floor(
-            printableHeight / gridSize
-        );
+        if (cellsPerPageX <= 0 || cellsPerPageY <= 0) return [];
 
-        if (
-            cellsPerPageX <= 0 ||
-            cellsPerPageY <= 0
-        ) {
-            return [];
-        }
+        //실제 한 페이지가 차지하는 이미지 영역
+        //반드시 grid의 배수
+        pageWidth = cellsPerPageX * gridSize;
+        pageHeight = cellsPerPageY * gridSize;
 
-        /*
-        * 실제 한 페이지가 차지하는 이미지 영역
-        *
-        * 반드시 grid의 배수
-        */
-        pageWidth =
-            cellsPerPageX * gridSize;
-
-        pageHeight =
-            cellsPerPageY * gridSize;
-
-        /*
-        * 이미지 전체 크기도 grid에 맞춘다.
-        *
-        * 여기서는 빈 공간을 추가하는 것이 아니라
-        * 호출하는 쪽에서 이미지 자체를 이 크기로
-        * 스케일링해서 사용한다는 전제.
-        */
-        pagesX = Math.ceil(
-            imageWidth / pageWidth
-        );
-
-        pagesY = Math.ceil(
-            imageHeight / pageHeight
-        );
+        //이미지 전체 크기도 grid에 맞춘다.
+        pagesX = Math.ceil(imageWidth / pageWidth);
+        pagesY = Math.ceil(imageHeight / pageHeight);
 
     }
-    else{
+    else {
+        //그리드가 없을 때는 그냥 printable 영역을 한 페이지로 사용
         pageWidth = printableWidth;
         pageHeight = printableHeight;
 
+        //올림해야함
+        //반올림이나 내림을 하면 이미지가 잘림
         pagesX = Math.ceil(imageWidth / printableWidth);
         pagesY = Math.ceil(imageHeight / printableHeight);
     }
-    
+
 
     const pages: SplitPages[] = [];
 
@@ -108,33 +82,15 @@ export function splitPages({
     for (let y = 0; y < pagesY; y++) {
         for (let x = 0; x < pagesX; x++) {
 
-            const sourceX =
-                x * pageWidth;
+            const sourceX = x * pageWidth;
+            const sourceY = y * pageHeight;
 
-            const sourceY =
-                y * pageHeight;
 
-            const sourceWidth =
-                Math.min(
-                    pageWidth,
-                    imageWidth - sourceX
-                );
+            //이미지의 크기가 페이지보다 클 경우를 대비
+            const sourceWidth = Math.min(pageWidth, imageWidth - sourceX);
+            const sourceHeight = Math.min(pageHeight, imageHeight - sourceY);
 
-            const sourceHeight =
-                Math.min(
-                    pageHeight,
-                    imageHeight - sourceY
-                );
-
-            pages.push({
-                pageIndex,
-
-                sourceX,
-                sourceY,
-
-                sourceWidth,
-                sourceHeight,
-            });
+            pages.push({ pageIndex, sourceX, sourceY, sourceWidth, sourceHeight });
 
             pageIndex++;
         }

@@ -6,34 +6,35 @@ import { type CanvasSettings } from "@/components/context/canvasContext";
 import { type ImageData } from "@/components/utils/fileToImage";
 import { PDFDocument } from "pdf-lib";
 import type { SplitPages } from "../utils/canvas/splitPages";
+import { makePdf } from "../utils/canvas/makePdf";
 
-export function MapContextProvider({ children }: { children: ReactNode }){
+export function MapContextProvider({ children }: { children: ReactNode }) {
 
   //현재 viewport에 보이고 있는 선택된 이미지의 데이터
   //id: string, file:File, image:HTMLImageElement
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
-  
+
   //현재 업로드된 이미지들의 이미지데이터 배열
-  const [uploadedImages, setUploadedImages] =  useState<ImageData[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<ImageData[]>([]);
 
-  const [canvasSettings, setCanvasSettings ] =  useState<CanvasSettings>({
-    isPx : true,
-    
-    marginTop : 100,
-    marginBottom : 100,
-    marginLeft : 100,
-    marginRight : 100,
+  const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
+    isPx: true,
 
-    paperWidth : 2480,
-    paperHeight : 3508,
+    marginTop: 100,
+    marginBottom: 100,
+    marginLeft: 100,
+    marginRight: 100,
 
-    isGrid : true,
-    gridSize : 300,
-    gridPenColor : "#000000",
-    gridPenSize : 10,
+    paperWidth: 2480,
+    paperHeight: 3508,
 
-    scale : 100,
-    
+    isGrid: true,
+    gridSize: 300,
+    gridPenColor: "#000000",
+    gridPenSize: 10,
+
+    scale: 100,
+
   })
 
   //한 페이지 당 이미지를 가져올 좌상단 점 좌표와 너비, 높이가 저장되어 있음
@@ -45,7 +46,7 @@ export function MapContextProvider({ children }: { children: ReactNode }){
   //생성된 pdf들의 배열
   //id:string, name:string, blob:Blob, previewUrl:string, createdAt: number
   const [generatedPdfs, setGeneratedPdfs] = useState<GeneratedPdf[]>([]);
-  
+
   //deletePdf나 useCallback에서 오래된 state 사용하지 않도록 ref 생성
   const generatedPdfsRef = useRef(generatedPdfs);
   useEffect(() => {
@@ -58,7 +59,7 @@ export function MapContextProvider({ children }: { children: ReactNode }){
   const [loadingMessage, setLoadingMessage] = useState("");
 
   //현재 선택된 이미지를 pdf로 변환한 뒤 pdfList에 추가
-  const addPdf = useCallback(async () => {  //canvasSettings, isLoading, pages, selectedImage가 변경될 때만 실행
+  /*const addPdf = useCallback(async () => { 
 
     //현재 선택된 이미지가 없으면 종료
     //이미 pdf 생성 중이면 중복 실행 방지로 종료
@@ -121,6 +122,28 @@ export function MapContextProvider({ children }: { children: ReactNode }){
       setIsLoading(false);
       setLoadingMessage("");
     }
+  }, [canvasSettings, isLoading, pages, selectedImage]);*/
+
+
+  const addPdf = useCallback(async () => {
+    const result = await makePdf({
+      image: selectedImage.image,
+      option: canvasSettings,
+      pages: pages
+    });
+
+    if (!result) return;
+
+    setGeneratedPdfs(prev => [...prev, {
+      id: crypto.randomUUID(),
+      name: `split_${selectedImage.file.name}.pdf`,              //file name
+      blob: result.blob, //pdf
+      previewUrl: result.previewUrl,           //preview 이미지
+      createdAt: Date.now(),
+    }]);
+
+    setIsLoading(false);
+    setLoadingMessage("");
   }, [canvasSettings, isLoading, pages, selectedImage]);
 
   //pdf리스트에서 pdf 삭제
@@ -128,7 +151,7 @@ export function MapContextProvider({ children }: { children: ReactNode }){
   const deletePdf = useCallback((id: string) => {
     //id로 삭제할 pdf 식별
     const target = generatedPdfsRef.current.find(pdf => pdf.id === id);
-    
+
     //미리보기 Url 브라우저 메모리에서 해제
     if (target?.previewUrl.startsWith("blob:")) {
       URL.revokeObjectURL(target.previewUrl);
@@ -183,7 +206,7 @@ export function MapContextProvider({ children }: { children: ReactNode }){
         //copyPages(sourcePdf, [0,1,2]) // sourcePdf에서 0,1,2번째 페이지들을 가져옴
         //getPageIndicies() //pdf의 모든 페이지 번호를 가져옴
         const pagesToCopy = await mergedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
-        
+
         //pagesToCopy를 순회하면서 각 페이지당 addPage 호출하여 페이지 추가
         pagesToCopy.forEach(page => mergedPdf.addPage(page));
       }
@@ -193,10 +216,10 @@ export function MapContextProvider({ children }: { children: ReactNode }){
 
       //mergedByte 만큼의 버퍼 생성
       const mergedBuffer = new ArrayBuffer(mergedBytes.byteLength);
-      
+
       //버퍼에 데이터 복사
       new Uint8Array(mergedBuffer).set(mergedBytes);
-      
+
       //브라우저에서 사용 가능한 Blob으로 만듦
       const mergedBlob = new Blob([mergedBuffer], { type: "application/pdf" });
 
@@ -205,10 +228,10 @@ export function MapContextProvider({ children }: { children: ReactNode }){
       const link = document.createElement("a");
       link.href = url;
       link.download = "merged-maps.pdf";
-      
+
       //클릭 이벤트 실행하여 pdf 다운로드
       link.click();
-      
+
       //Blob url 제거
       setTimeout(() => URL.revokeObjectURL(url), 0);
     }

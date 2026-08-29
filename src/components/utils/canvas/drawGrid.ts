@@ -1,5 +1,3 @@
-// utils/canvas/drawGrid.ts
-
 export interface DrawGridOptions {
     ctx: Pick<CanvasRenderingContext2D, "beginPath" | "moveTo" | "lineTo" | "stroke"> & {
         strokeStyle: string | CanvasGradient | CanvasPattern;
@@ -12,21 +10,12 @@ export interface DrawGridOptions {
     gridPenSize: number;
 }
 
-export function drawGrid({
-    ctx,
-    width,
-    height,
-    gridSize,
-    gridPenColor,
-    gridPenSize
-}: DrawGridOptions) {
-    if (
-        !Number.isFinite(gridSize) ||
-        gridSize <= 0 ||
-        !Number.isFinite(gridPenSize) ||
-        gridPenSize <= 0
-    ) return;
+export function drawGrid({ ctx, width, height, gridSize, gridPenColor, gridPenSize }: DrawGridOptions) {
 
+    //GridSize와 GridPenSize가 유효한지 확인
+    if (!Number.isFinite(gridSize) || gridSize <= 0 || !Number.isFinite(gridPenSize) || gridPenSize <= 0) return;
+
+    //GridSize와 GridPenSize를 설정
     ctx.strokeStyle = gridPenColor;
     ctx.lineWidth = gridPenSize;
 
