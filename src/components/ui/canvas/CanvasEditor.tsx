@@ -12,6 +12,9 @@ import { Button } from "@chakra-ui/react";
 
 
 export function CanvasEditor() {
+
+    const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+
     //context에서 가져오기
     const { selectedImage } = useImageContext();
     const { canvasSettings, setPages, isResizingGrid, setIsResizingGrid, setCanvasSettings } = useCanvasContext();
@@ -22,28 +25,29 @@ export function CanvasEditor() {
     //scale 비율 (0~100 → 0.0~1.0)
     const scaleFactor = canvasSettings.scale * 0.01;
 
-    //캔버스는 원본(naturalWidth/Height) 기준으로 그림
-    //makePdf.ts와 동일하게 원본 좌표계를 사용
-    const canvasSize = useMemo(() => {
-        if (!image) return { width: 0, height: 0 };
-        return {
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-        };
-    }, [image]);
+    //viewport 크기 감지
+    useEffect(() => {
+        if (!viewportRef.current) return;
+
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+
+            setViewportSize({ width, height });
+        });
+
+        observer.observe(viewportRef.current);
+
+        return () => observer.disconnect();
+    }, []);
 
     //viewport에 표시될 크기 = 원본 × scale
     //useCanvas에 전달하여 뷰포트 패닝/줌 기준으로 사용
     const displaySize = useMemo(() => {
         return {
-            width: canvasSize.width * scaleFactor,
-            height: canvasSize.height * scaleFactor,
+            width: image.naturalWidth * scaleFactor,
+            height: image.naturalHeight * scaleFactor,
         };
-    }, [canvasSize.width, canvasSize.height, scaleFactor]);
-
-    //viewport 크기
-    const viewportWidth = 700
-    const viewportHeight = 700
+    }, [image, scaleFactor]);
 
     //gridSize 입력받을 때 드래그 상태
     const [isDraggingGrid, setIsDraggingGrid] = useState(false);
@@ -79,15 +83,15 @@ export function CanvasEditor() {
             return 0.1;
         }
 
-        const zoomX = viewportWidth / displaySize.width;
-        const zoomY = viewportHeight / displaySize.height;
+        const zoomX = viewportSize.width / displaySize.width;
+        const zoomY = viewportSize.height / displaySize.height;
 
         return Math.min(zoomX, zoomY);
     }, [
         displaySize.width,
         displaySize.height,
-        viewportWidth,
-        viewportHeight,
+        viewportSize.width,
+        viewportSize.height,
     ]);
 
     //최대 확대 배율
@@ -113,8 +117,8 @@ export function CanvasEditor() {
         resetView,
         zoom,
     } = useCanvas({
-        viewportWidth: viewportWidth,
-        viewportHeight: viewportHeight,
+        viewportWidth: viewportSize.width,
+        viewportHeight: viewportSize.height,
 
         canvasWidth: displaySize.width,
         canvasHeight: displaySize.height,
@@ -136,8 +140,8 @@ export function CanvasEditor() {
         const rect = event.currentTarget.getBoundingClientRect();
 
         return {
-            x: Math.min(Math.max(event.clientX - rect.left, 0), viewportWidth),
-            y: Math.min(Math.max(event.clientY - rect.top, 0), viewportHeight),
+            x: Math.min(Math.max(event.clientX - rect.left, 0), viewportSize.width),
+            y: Math.min(Math.max(event.clientY - rect.top, 0), viewportSize.height),
         };
     };
 
@@ -162,8 +166,8 @@ export function CanvasEditor() {
 
         const requestedSize = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
 
-        const availableWidth = directionX > 0 ? viewportWidth - start.x : start.x;
-        const availableHeight = directionY > 0 ? viewportHeight - start.y : start.y;
+        const availableWidth = directionX > 0 ? viewportSize.width - start.x : start.x;
+        const availableHeight = directionY > 0 ? viewportSize.height - start.y : start.y;
 
         const size = Math.min(requestedSize, availableWidth, availableHeight);
 
@@ -191,9 +195,9 @@ export function CanvasEditor() {
         const squareBox = getSquareBox(dragStart, point);
 
         //드래그 크기를 원본 좌표계로 변환
-        //zoom: 뷰포트 줌, scaleFactor: 이미지 scale
-        //화면상 크기 → 원본 px = / (zoom * scaleFactor)
-        const selectedSize = squareBox.width / (zoom * scaleFactor);
+        //zoom: 뷰포트 줌
+        //grid 그릴 때 scaleFactor를 적용하므로 별도 변환 불필요
+        const selectedSize = squareBox.width / zoom;
 
         if (selectedSize > 0) {
             const gridSize = canvasSettings.isPx
@@ -218,8 +222,8 @@ export function CanvasEditor() {
 
         return splitPages({
 
-            imageWidth: canvasSize.width,
-            imageHeight: canvasSize.height,
+            imageWidth: image.naturalWidth,
+            imageHeight: image.naturalHeight,
 
             gridSize,
 
@@ -229,7 +233,7 @@ export function CanvasEditor() {
             isGrid: canvasSettings.isGrid,
         });
 
-    }, [image, canvasSize.width, canvasSize.height, gridSize, printableWidth, printableHeight, canvasSettings.isGrid]);
+    }, [image, image.naturalWidth, image.naturalHeight, gridSize, printableWidth, printableHeight, canvasSettings.isGrid]);
 
     useEffect(() => {
         if (pages) setPages(pages);
@@ -242,8 +246,8 @@ export function CanvasEditor() {
             style={{
                 position: "relative",
                 zIndex: isResizingGrid ? 10001 : "auto",
-                width: viewportWidth,
-                height: viewportHeight,
+                width: "100%",
+                height: "100%",
                 overflow: "hidden",
                 background: "#e5e5e5",
                 overscrollBehavior: "none",
@@ -275,8 +279,8 @@ export function CanvasEditor() {
                         scale은 CSS transform으로 확대하여 표시 */}
                     <div
                         style={{
-                            width: canvasSize.width,
-                            height: canvasSize.height,
+                            width: image.naturalWidth,
+                            height: image.naturalHeight,
                             transform: `scale(${scaleFactor})`,
                             transformOrigin: "0 0",
                         }}
@@ -284,16 +288,16 @@ export function CanvasEditor() {
 
                         {/* 이미지 캔버스 */}
                         <ImageCanvas
-                            width={canvasSize.width}
-                            height={canvasSize.height}
+                            width={image.naturalWidth}
+                            height={image.naturalHeight}
                             image={image ? image : null}
                         />
                         {
                             canvasSettings.isGrid && //그리드가 있을 때만 렌더링
                             //그리드 캔버스
                             <GridCanvas
-                                width={canvasSize.width}
-                                height={canvasSize.height}
+                                width={image.naturalWidth}
+                                height={image.naturalHeight}
                                 gridSize={gridSize}
                                 gridPenColor={canvasSettings.gridPenColor}
                                 gridPenSize={canvasSettings.gridPenSize / scaleFactor}
@@ -302,8 +306,8 @@ export function CanvasEditor() {
 
                         {/* 가이드 캔버스 */}
                         <GuideCanvas
-                            width={canvasSize.width}
-                            height={canvasSize.height}
+                            width={image.naturalWidth}
+                            height={image.naturalHeight}
                             gridPenSize={canvasSettings.gridPenSize / scaleFactor}
                             pages={pages}
                         />

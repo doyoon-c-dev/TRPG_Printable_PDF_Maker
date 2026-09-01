@@ -1,4 +1,4 @@
-import { Box, Button, Image, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Image, Text } from "@chakra-ui/react";
 import { LuDownload, LuTrash2 } from "react-icons/lu";
 import { usePdfContext } from "@/components/hooks/usePdfContext";
 
@@ -19,12 +19,14 @@ export default function PdfList() {
                 gap={2}
             >
                 <Box
+                    role="list"
+                    aria-label="생성된 PDF 목록"
                     border="1px solid lightgray"
                     backgroundColor="white"
                     justifyContent="center"
                     alignItems="flex-start"
                     width="80%"
-                    height="250px"
+                    height="255px"
                     flexDirection="row"
                     display="flex"
                     overflowX="auto"
@@ -33,11 +35,13 @@ export default function PdfList() {
 
                     {/* pdf 목록을 순회하며 pdf를 보여줌 */}
                     {generatedPdfs.map((pdf) => (
-                        <Box key={pdf.id} border="3px solid lightgray" borderRadius={15} width="150px" flexShrink={0} p="5px">
-                            <Image src={pdf.previewUrl} width="100%" height="200px" objectFit="contain" />
-                            <Text>{pdf.name}</Text>
-                            <Button onClick={() => downloadPdf(pdf.id)} size="sm"><LuDownload /></Button>
-                            <Button onClick={() => deletePdf(pdf.id)} size="sm"><LuTrash2 /></Button>
+                        <Box role="listitem" key={pdf.id} border="3px solid lightgray" borderRadius={15} width="150px" flexShrink={0} p="5px">
+                            <Image src={pdf.previewUrl} alt={`${pdf.name} 미리보기`} width="100%" height="150px" objectFit="contain" />
+                            <Text fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{pdf.name}</Text>
+                            <HStack>
+                                <Button aria-label={`${pdf.name} 다운로드`} onClick={() => downloadPdf(pdf.id)} size="sm"><LuDownload aria-hidden="true" /></Button>
+                                <Button aria-label={`${pdf.name} 삭제`} onClick={() => deletePdf(pdf.id)} size="sm"><LuTrash2 aria-hidden="true" /></Button>
+                            </HStack>
                         </Box>
                     ))}
                 </Box>

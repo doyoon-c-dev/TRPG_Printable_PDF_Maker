@@ -4,13 +4,13 @@ export default function Header() {
   return (
     <Box
       h="70px"
-      bg="blue.500"
+      bg="#2D3748"
       color="white"
       display="flex"
       alignItems="center"
       px={6}
     >
-      <Heading size="md">Map Grid Maker</Heading>
+      <Heading size="md">TRPG Printable PDF Maker</Heading>
     </Box>
   );
 }

@@ -59,92 +59,38 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
   const [loadingMessage, setLoadingMessage] = useState("");
 
   //현재 선택된 이미지를 pdf로 변환한 뒤 pdfList에 추가
-  /*const addPdf = useCallback(async () => { 
+  const addPdf = useCallback(async () => {
+    if (!selectedImage) return;
 
-    //현재 선택된 이미지가 없으면 종료
-    //이미 pdf 생성 중이면 중복 실행 방지로 종료
-    if (!selectedImage || isLoading) return;
-
-    //로딩중으로 상태 변경 후 message설정
+    //로딩 시작
     setIsLoading(true);
     setLoadingMessage("PDF 생성 중...");
 
-    try{
-      //상태 변경 직후 로딩 ui를 그릴 시간을 줌
-      await new Promise<void>((resolve) => { setTimeout(resolve, 0); });
+    try {
+      //상태 변경 직후 로딩 UI를 그릴 시간을 줌
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-      //worker로 이미지 전달하기 위해 HTMLImageElement를 비트맵으로 변환
-      const imageBitmap = await createImageBitmap(selectedImage.image);
-
-      //worker 비동기 이벤트방식이므로 await, Promise 사용
-      //result = { pdf, preview }
-      const result = await new Promise<{ pdf: ArrayBuffer; preview: Blob }>((resolve, reject) => {
-
-        //pdf 생성을 별도의 worker 스레드에서 실행
-        //pdf 계산하느라 멈추는 것을 줄여줌
-        const worker = new Worker( new URL("../utils/workers/pdf.worker.ts", import.meta.url), { type: "module" });
-
-        //worker에서 결과를 보내면
-        worker.onmessage = (event: MessageEvent<{ pdf?: ArrayBuffer; preview?: Blob; error?: string }>) => {
-          //worker 종료
-          worker.terminate();
-          
-          //오류 확인
-          //pdf나 preview가 있는지 확인
-          //pdf는 실제 pdf 파일, preview는 미리보기로 보여줄 image
-          if (event.data.error || !event.data.pdf || !event.data.preview) {
-            reject(new Error(event.data.error ?? "PDF 생성에 실패했습니다."));
-            return;
-          }
-          resolve({ pdf: event.data.pdf, preview: event.data.preview });
-        };
-
-        //실행 자체를 못 하면 종료
-        worker.onerror = () => {
-          worker.terminate();
-          reject(new Error("PDF worker를 실행할 수 없습니다."));
-        };
-        //worker에 데이터 전달
-        worker.postMessage({ image: imageBitmap, option: canvasSettings, pages }, [imageBitmap]);
+      const result = makePdf({
+        image: selectedImage.image,
+        option: canvasSettings,
+        pages: pages
       });
 
-      //새 pdf 추가
+      if (!result) return;
+
       setGeneratedPdfs(prev => [...prev, {
         id: crypto.randomUUID(),
-        name: `split_${selectedImage.file.name}.pdf`,              //file name
-        blob: new Blob([result.pdf], { type: "application/pdf" }), //pdf
-        previewUrl: URL.createObjectURL(result.preview),           //preview 이미지
+        name: `split_${selectedImage.file.name}.pdf`, //file name
+        blob: result.blob,                            //pdf
+        previewUrl: result.previewUrl,                //preview 이미지
         createdAt: Date.now(),
       }]);
-    }
-    finally{
-      //완료되면 로딩을 종료하고 message도 초기화
+    } finally {
+      //로딩 종료
       setIsLoading(false);
       setLoadingMessage("");
     }
-  }, [canvasSettings, isLoading, pages, selectedImage]);*/
-
-
-  const addPdf = useCallback(async () => {
-    const result = await makePdf({
-      image: selectedImage.image,
-      option: canvasSettings,
-      pages: pages
-    });
-
-    if (!result) return;
-
-    setGeneratedPdfs(prev => [...prev, {
-      id: crypto.randomUUID(),
-      name: `split_${selectedImage.file.name}.pdf`,              //file name
-      blob: result.blob, //pdf
-      previewUrl: result.previewUrl,           //preview 이미지
-      createdAt: Date.now(),
-    }]);
-
-    setIsLoading(false);
-    setLoadingMessage("");
-  }, [canvasSettings, isLoading, pages, selectedImage]);
+  }, [canvasSettings, pages, selectedImage]);
 
   //pdf리스트에서 pdf 삭제
   //useCallback -> 최초 생성 후 재사용

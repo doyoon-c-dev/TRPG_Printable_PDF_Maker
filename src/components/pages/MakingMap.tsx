@@ -24,7 +24,7 @@ export default function MakingMap() {
         />
         <Box flexDirection="row" display="flex" alignItems="flex-start" justifyContent="center" gap={10} width="90%" flexWrap="wrap">
           <MapButtons />
-          <Box border="1px solid gray" w={702} h={702} bg="gray.100">
+          <Box border="1px solid gray" w="min(702px, 90vw)" h="min(702px, 90vw)" bg="gray.100">
             <CanvasEditor />
           </Box>
         </Box>

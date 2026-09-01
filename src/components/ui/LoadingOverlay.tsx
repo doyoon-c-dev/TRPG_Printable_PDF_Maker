@@ -20,6 +20,9 @@ export function LoadingOverlay() {
             display="flex"
             alignItems="center"
             justifyContent="center"
+            role="status"
+            aria-live="polite"
+            aria-label="로딩 중"
         >
             <VStack
                 bg="white"
@@ -27,7 +30,7 @@ export function LoadingOverlay() {
                 borderRadius="md"
                 gap={4}
             >
-                <Spinner size="xl" />
+                <Spinner size="xl" aria-hidden="true" />
 
                 <Text>
                     {loadingMessage}

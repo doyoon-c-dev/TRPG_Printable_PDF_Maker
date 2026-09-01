@@ -1,9 +1,10 @@
-import { Box, Text, Grid, GridItem, HStack, Button, Field, InputGroup, NumberInput, Switch, ColorPicker, parseColor, Portal } from "@chakra-ui/react";
+import { Box, Text, Grid, GridItem, HStack, Button, Field, InputGroup, NumberInput, Switch, ColorPicker, parseColor, Portal, VStack } from "@chakra-ui/react";
 import type { CanvasSettings } from "@/components/context/canvasContext";
 import { useCanvasContext } from "@/components/hooks/useCanvasContext";
 import { usePdfContext } from "@/components/hooks/usePdfContext";
 import { mmToPx, pxToMm } from "@/components/utils/canvas/unit";
 import { LuArrowRightLeft } from "react-icons/lu";
+import { HelpTooltip } from "@/components/ui/HelpTooltip";
 
 
 export const MapButtons = () => {
@@ -94,9 +95,16 @@ export const MapButtons = () => {
             >
                 {/* Margin */}
                 <GridItem colSpan={2}>
-                    <Text fontWeight="bold">
-                        Margin
-                    </Text>
+                    <HStack>
+                        <Text fontWeight="bold">
+                            Margin
+                        </Text>
+                        <HelpTooltip>
+                            <Text>
+                                Margin is the space between the edge of the paper and the grid.
+                            </Text>
+                        </HelpTooltip>
+                    </HStack>
                 </GridItem>
 
                 {field("Top", numberInput("marginTop", canvasSettings.marginTop, 0, canvasSettings.isPx ? 1000 : 50, canvasSettings.isPx ? 1 : 0.1))}
@@ -109,9 +117,16 @@ export const MapButtons = () => {
 
                 {/* Paper */}
                 <GridItem colSpan={2} mt={5}>
-                    <Text fontWeight="bold">
-                        Paper
-                    </Text>
+                    <HStack>
+                        <Text fontWeight="bold">
+                            Paper
+                        </Text>
+                        <HelpTooltip>
+                            <Text>
+                                Paper is the size of the paper.
+                            </Text>
+                        </HelpTooltip>
+                    </HStack>
                 </GridItem>
 
                 {field("Width", numberInput("paperWidth", canvasSettings.paperWidth, 1, canvasSettings.isPx ? 10000 : 500, canvasSettings.isPx ? 1 : 0.1))}
@@ -120,9 +135,16 @@ export const MapButtons = () => {
 
                 {/* Grid */}
                 <GridItem colSpan={2} mt={5}>
-                    <Text fontWeight="bold">
-                        Grid
-                    </Text>
+                    <HStack>
+                        <Text fontWeight="bold">
+                            Grid
+                        </Text>
+                        <HelpTooltip>
+                            <Text>
+                                Grid is the size of the grid.
+                            </Text>
+                        </HelpTooltip>
+                    </HStack>
                 </GridItem>
 
                 <Field.Root width="auto">
@@ -170,9 +192,17 @@ export const MapButtons = () => {
 
                 {/* 단위 */}
                 <GridItem colSpan={2} mt={5}>
-                    <Text fontWeight="bold">
-                        Unit
-                    </Text>
+                    <HStack>
+                        <Text fontWeight="bold">
+                            Unit
+                        </Text>
+                        <HelpTooltip>
+                            <Text>
+                                default unit is px. If you want to use mm, change the unit.
+                                dpi is 300. So if you use mm, the size of the paper will be different from the size of the paper in px.
+                            </Text>
+                        </HelpTooltip>
+                    </HStack>
                 </GridItem>
                 <HStack gap={3}>
                     <Text>mm</Text>
@@ -190,20 +220,44 @@ export const MapButtons = () => {
                 {field("Scale", numberInput("scale", canvasSettings.scale, 1, 1000, 1))}
 
                 {/* Custom Grid */}
-                <Button
-                    type="button"
-                    onClick={() => setIsResizingGrid(true)}
-                    disabled={isResizingGrid}
-                >
-                    Custom Grid
-                </Button>
+                <VStack mt={5} alignItems="flex-start">
+                    <HStack>
+                        <Text fontWeight="bold">
+                            Custom Grid
+                        </Text>
+                        <HelpTooltip>
+                            <Text>
+                                Click and drag within the viewport to set the grid size.
+                            </Text>
+                        </HelpTooltip>
+                    </HStack>
+                    <Button
+                        type="button"
+                        onClick={() => setIsResizingGrid(true)}
+                        disabled={isResizingGrid}
+                    >
+                        Custom Grid
+                    </Button>
+                </VStack>
 
                 {/* Add PDF */}
-                <Button
-                    onClick={addPdf}
-                    disabled={isLoading}>
-                    add pdf
-                </Button>
+                <VStack mt={5} alignItems="flex-start">
+                    <HStack>
+                        <Text fontWeight="bold">
+                            Add PDF
+                        </Text>
+                        <HelpTooltip>
+                            <Text>
+                                convert image to pdf and add to list.
+                            </Text>
+                        </HelpTooltip>
+                    </HStack>
+                    <Button
+                        onClick={addPdf}
+                        disabled={isLoading}>
+                        convert pdf
+                    </Button>
+                </VStack>
             </Grid>
         </Box>
     );
