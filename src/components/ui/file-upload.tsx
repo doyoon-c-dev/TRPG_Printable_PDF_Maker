@@ -76,8 +76,8 @@ export default function FileUploadComponent({
             });
         } catch {
             toaster.create({
-                title: "파일 업로드 실패",
-                description: "이미지 파일(PNG, JPG)만 업로드할 수 있습니다. 파일을 확인해 주세요.",
+                title: "File upload failed",
+                description: "Only image files (PNG, JPG, JPEG) can be uploaded. Please check the file.",
                 type: "error",
                 duration: 5000,
             });
@@ -106,34 +106,33 @@ export default function FileUploadComponent({
                 justifyContent="center"
                 gap={2}
             >
-                <Button onClick={open} aria-label="파일 업로드 (PNG, JPG)">파일 업로드</Button>
-                <input {...getInputProps()} aria-label="이미지 파일 업로드 (PNG, JPG 가능)" />
+                <Button onClick={open} aria-label="upload files (PNG, JPG)">Upload Files</Button>
+                <input {...getInputProps()} aria-label="upload files (PNG, JPG)" />
                 {/* 업로드된 이미지 목록 */}
                 {uploadedImages.length > 0 ? (
                     <Box
-                        role="listbox"
-                        aria-label="업로드된 이미지 목록"
-                        border="1px solid lightgray"
-                        backgroundColor={isDragActive ? "lightgray" : "white"}
-                        justifyContent="center"
-                        alignItems="flex-start"
-                        height="auto"
-                        flexDirection="row"
+                        role="list"
+                        aria-label="uploaded images"
                         display="flex"
+                        flexDirection="row"
+                        alignItems="flex-start"
+                        justifyContent="flex-start"
                         overflowX="auto"
+                        overflowY="hidden"
+                        width={{ base: "100%", md: "80%" }}
                         p="15px"
                         gap="15px"
-                        width="80%"
+                        border="1px solid lightgray"
+                        backgroundColor={isDragActive ? "lightgray" : "white"}
                     >
                         {uploadedImages.map((imgData) => {
                             const isSelected = selectedImage?.key === imgData.key;
                             return (
                                 <Box
                                     key={imgData.key}
-                                    as="button"
                                     role="option"
                                     aria-selected={isSelected}
-                                    aria-label={`${imgData.file.name} ${isSelected ? "(선택됨)" : "선택"}`}
+                                    aria-label={`${imgData.file.name} ${isSelected ? "(selected)" : "select"}`}
                                     position="relative"
                                     border={isSelected ? "3px solid lightblue" : "3px solid lightgray"}
                                     borderRadius={15}
@@ -169,7 +168,7 @@ export default function FileUploadComponent({
                                         size="xs"
                                         variant="ghost"
                                         rounded="full"
-                                        aria-label={`${imgData.file.name} 이미지 삭제`}
+                                        aria-label={`${imgData.file.name} delete image`}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onDeleteImg(imgData.key);
@@ -200,10 +199,11 @@ export default function FileUploadComponent({
                         height="200px"
                         flexDirection="row"
                         display="flex"
-                        aria-label="파일 드롭 영역"
+                        aria-label="file drop area"
+                        gap={2}
                     >
                         <HiUpload aria-hidden="true" />
-                        <Text>파일을 드래그해주세요. (png, jpg, jpeg만 가능합니다.)</Text>
+                        <Text fontSize={{ base: "xs", md: "sm" }}>Drag and drop files here. (png, jpg, jpeg only)</Text>
                     </Box>
                 )}
             </Box>

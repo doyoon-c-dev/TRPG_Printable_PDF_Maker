@@ -33,7 +33,7 @@ export const MapButtons = () => {
 
         <NumberInput.Root
             value={String(value)}
-            width="200px"
+            width={{ base: "130px", md: "200px" }}
             min={min}
             max={max}
             step={step}
@@ -46,6 +46,7 @@ export const MapButtons = () => {
         >
             <NumberInput.Control />
             <InputGroup
+                width={{ base: "130px", md: "200px" }}
                 startElementProps={{ pointerEvents: "auto" }}
                 startElement={
                     <NumberInput.Scrubber>
@@ -53,7 +54,7 @@ export const MapButtons = () => {
                     </NumberInput.Scrubber>
                 }
             >
-                <NumberInput.Input />
+                <NumberInput.Input width={{ base: "130px", md: "200px" }} />
             </InputGroup>
         </NumberInput.Root>
     );
@@ -87,11 +88,11 @@ export const MapButtons = () => {
     }
 
     return (
-        <Box display="flex" justifyContent="center" alignItems="flex-start" width="30%">
+        <Box display="flex" justifyContent="flex-start" alignItems="flex-start" width="auto">
             <Grid
                 templateColumns="repeat(2, 1fr)"
                 gap={4}
-                width="100%"
+                width="50%"
             >
                 {/* Margin */}
                 <GridItem colSpan={2}>
@@ -123,7 +124,7 @@ export const MapButtons = () => {
                         </Text>
                         <HelpTooltip>
                             <Text>
-                                Paper is the size of the paper.
+                                Paper is the size of the paper. A4 is default.
                             </Text>
                         </HelpTooltip>
                     </HStack>
@@ -160,7 +161,7 @@ export const MapButtons = () => {
 
                 {field("Grid Size", numberInput("gridSize", canvasSettings.gridSize, 1, canvasSettings.isPx ? 1000 : 50, canvasSettings.isPx ? 1 : 0.1))}
 
-                <Field.Root width="auto">
+                <Field.Root width={{ base: "130px", md: "200px" }}>
                     <Field.Label>Pen Color</Field.Label>
                     <ColorPicker.Root
                         width="auto"
@@ -235,6 +236,7 @@ export const MapButtons = () => {
                         type="button"
                         onClick={() => setIsResizingGrid(true)}
                         disabled={isResizingGrid}
+                        width={{ base: "130px", md: "200px" }}
                     >
                         Custom Grid
                     </Button>
@@ -254,7 +256,9 @@ export const MapButtons = () => {
                     </HStack>
                     <Button
                         onClick={addPdf}
-                        disabled={isLoading}>
+                        disabled={isLoading}
+                        width={{ base: "130px", md: "200px" }}
+                    >
                         convert pdf
                     </Button>
                 </VStack>

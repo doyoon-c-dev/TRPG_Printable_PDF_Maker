@@ -1,5 +1,5 @@
 import { Box, Flex, HStack, Text, Link } from "@chakra-ui/react";
-import { Heart, Coffee } from "lucide-react";
+import { Coffee } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 
 export function Footer() {
@@ -48,16 +48,7 @@ export function Footer() {
             color="gray.600"
             _hover={{ color: "gray.900" }}
           >
-            How to use
-          </Link>
-
-          <Link
-            href="#"
-            fontSize="sm"
-            color="gray.600"
-            _hover={{ color: "gray.900" }}
-          >
-            Accessibility Guide
+            Feedback
           </Link>
 
           <Link

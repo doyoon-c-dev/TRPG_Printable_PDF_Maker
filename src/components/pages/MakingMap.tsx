@@ -22,9 +22,17 @@ export default function MakingMap() {
           uploadedImages={uploadedImages}
           setUploadedImages={setUploadedImages}
         />
-        <Box flexDirection="row" display="flex" alignItems="flex-start" justifyContent="center" gap={10} width="90%" flexWrap="wrap">
+        <Box
+          display="flex"
+          alignItems="flex-start"
+          justifyContent="center"
+          gap={5}
+          width="90%"
+          flexWrap={{ base: "wrap", lg: "nowrap" }}
+          flexDirection={{ base: "column", lg: "row" }}
+        >
           <MapButtons />
-          <Box border="1px solid gray" w="min(702px, 90vw)" h="min(702px, 90vw)" bg="gray.100">
+          <Box border="1px solid gray" w="min(702px, 90vw)" h="min(702px, 90vw)" bg="gray.100" flexShrink={0}>
             <CanvasEditor />
           </Box>
         </Box>

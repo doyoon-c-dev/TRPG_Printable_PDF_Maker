@@ -64,7 +64,7 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
 
     //로딩 시작
     setIsLoading(true);
-    setLoadingMessage("PDF 생성 중...");
+    setLoadingMessage("Creating PDF...");
 
     try {
       //상태 변경 직후 로딩 UI를 그릴 시간을 줌
@@ -132,7 +132,7 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
 
     //로딩 중으로 변경하고 message 설정
     setIsLoading(true);
-    setLoadingMessage("PDF 다운로드 중...");
+    setLoadingMessage("Downloading PDF...");
 
     try {
       //상태 변경 직후 로딩 ui를 그릴 시간을 줌

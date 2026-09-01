@@ -7,8 +7,9 @@ import { splitPages } from "@/components/utils/canvas/splitPages";
 
 import { useImageContext } from "@/components/hooks/useImageContext";
 import { useCanvasContext } from "@/components/hooks/useCanvasContext";
-import { DEFAULT_DPI, mmToPx, pxToMm } from "@/components/utils/canvas/unit";
+import { DEFAULT_DPI, mmToPx } from "@/components/utils/canvas/unit";
 import { Button } from "@chakra-ui/react";
+import { useResizingGrid } from "@/components/hooks/useResizingGrid";
 
 
 export function CanvasEditor() {
@@ -27,7 +28,7 @@ export function CanvasEditor() {
 
     //viewport 크기 감지
     useEffect(() => {
-        if (!viewportRef.current) return;
+        if (!canvas.viewportRef.current) return;
 
         const observer = new ResizeObserver(([entry]) => {
             const { width, height } = entry.contentRect;
@@ -35,7 +36,7 @@ export function CanvasEditor() {
             setViewportSize({ width, height });
         });
 
-        observer.observe(viewportRef.current);
+        observer.observe(canvas.viewportRef.current);
 
         return () => observer.disconnect();
     }, []);
@@ -43,16 +44,13 @@ export function CanvasEditor() {
     //viewport에 표시될 크기 = 원본 × scale
     //useCanvas에 전달하여 뷰포트 패닝/줌 기준으로 사용
     const displaySize = useMemo(() => {
+        if (!image) return { width: 0, height: 0 };
+
         return {
             width: image.naturalWidth * scaleFactor,
             height: image.naturalHeight * scaleFactor,
         };
     }, [image, scaleFactor]);
-
-    //gridSize 입력받을 때 드래그 상태
-    const [isDraggingGrid, setIsDraggingGrid] = useState(false);
-    const [gridBox, setGridBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
-    const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
 
 
     //단위 변환 (mm → px)
@@ -109,14 +107,7 @@ export function CanvasEditor() {
 
     //useCanvas hook을 사용하여 뷰포트 관련 상태 및 함수 가져오기
     //canvasWidth/Height는 displaySize(scaled) 기준 → 패닝 범위 계산용
-    const {
-        viewportRef,
-        transform,
-        handleMouseDown,
-        handleContextMenu,
-        resetView,
-        zoom,
-    } = useCanvas({
+    const canvas = useCanvas({
         viewportWidth: viewportSize.width,
         viewportHeight: viewportSize.height,
 
@@ -128,90 +119,12 @@ export function CanvasEditor() {
         maxZoom: maxZoom,
     });
 
+    const resizingGrid = useResizingGrid({ viewportSize, zoom: canvas.zoom, isResizingGrid, currentGridSize: gridSize, isPx: canvasSettings.isPx, });
+
     //이미지나 이미지 스케일 변경 시 뷰포트 초기화
     useEffect(() => {
-        resetView();
-    }, [image, displaySize.width, displaySize.height, resetView]);
-
-    //마우스 좌표를 뷰포트 좌표로 변환
-    //뷰포트 밖의 좌표는 0과 viewportWidth, viewportHeight 사이로 제한
-    //이 함수는 gridSize를 계산할 때 사용됨
-    const getViewportPoint = (event: React.MouseEvent) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-
-        return {
-            x: Math.min(Math.max(event.clientX - rect.left, 0), viewportSize.width),
-            y: Math.min(Math.max(event.clientY - rect.top, 0), viewportSize.height),
-        };
-    };
-
-    //그리드 크기 조절 시작
-    const handleGridMouseDown = (event: React.MouseEvent) => {
-        if (!isResizingGrid || event.button !== 0) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        const point = getViewportPoint(event);
-        setDragStart(point);
-        setGridBox({ x: point.x, y: point.y, width: 0, height: 0 });
-        setIsDraggingGrid(true);
-    };
-
-    //grid는 정사각형이므로 x와 y 중 더 큰 값을 기준으로 크기를 계산
-    const getSquareBox = (start: { x: number; y: number }, end: { x: number; y: number }) => {
-
-        const directionX = end.x >= start.x ? 1 : -1;
-        const directionY = end.y >= start.y ? 1 : -1;
-
-        const requestedSize = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
-
-        const availableWidth = directionX > 0 ? viewportSize.width - start.x : start.x;
-        const availableHeight = directionY > 0 ? viewportSize.height - start.y : start.y;
-
-        const size = Math.min(requestedSize, availableWidth, availableHeight);
-
-        return {
-            x: directionX > 0 ? start.x : start.x - size,
-            y: directionY > 0 ? start.y : start.y - size,
-            width: size,
-            height: size,
-        };
-    };
-
-    //그리드 크기 조절 중 마우스 이동
-    const handleGridMouseMove = (event: React.MouseEvent) => {
-        if (!isDraggingGrid || !dragStart) return;
-
-        const point = getViewportPoint(event);
-        setGridBox(getSquareBox(dragStart, point));
-    };
-
-    //그리드 크기 조절 중 마우스 버튼 떼기
-    const handleGridMouseUp = (event: React.MouseEvent) => {
-        if (!isDraggingGrid || !dragStart) return;
-
-        const point = getViewportPoint(event);
-        const squareBox = getSquareBox(dragStart, point);
-
-        //드래그 크기를 원본 좌표계로 변환
-        //zoom: 뷰포트 줌
-        //grid 그릴 때 scaleFactor를 적용하므로 별도 변환 불필요
-        const selectedSize = squareBox.width / zoom;
-
-        if (selectedSize > 0) {
-            const gridSize = canvasSettings.isPx
-                ? Math.round(selectedSize)
-                : Math.round(pxToMm(selectedSize, DEFAULT_DPI) * 10) / 10;
-
-            setCanvasSettings((previous) => ({ ...previous, gridSize }));
-        }
-
-        setIsDraggingGrid(false);
-        setDragStart(null);
-        setGridBox(null);
-        setIsResizingGrid(false);
-    };
+        canvas.resetView();
+    }, [image, displaySize.width, displaySize.height, canvas.resetView]);
 
     //페이지 분할 (원본 좌표계 기준)
     //splitPages가 반환하는 page 좌표도 원본 기준이므로
@@ -233,16 +146,64 @@ export function CanvasEditor() {
             isGrid: canvasSettings.isGrid,
         });
 
-    }, [image, image.naturalWidth, image.naturalHeight, gridSize, printableWidth, printableHeight, canvasSettings.isGrid]);
+    }, [image, gridSize, printableWidth, printableHeight, canvasSettings.isGrid]);
 
     useEffect(() => {
         if (pages) setPages(pages);
     }, [pages, setPages]);
 
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if(e.pointerType === "touch"){
+            if(isResizingGrid){
+                resizingGrid.handleGridPointerDown(e);
+                return;
+            }
+            else{
+                canvas.handlePointerDown(e);
+            }
+        }
+
+        if(e.button === 0 && isResizingGrid ){
+            resizingGrid.handleGridPointerDown(e);
+            return;
+        }
+        
+        if(e.button === 2 || !isResizingGrid){
+            canvas.handlePointerDown(e);
+        }
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (isResizingGrid && (e.buttons === 0 || e.pointerType === "touch")) {
+            resizingGrid.handleGridPointerMove(e);
+            return;
+        }
+        else{
+            canvas.handlePointerMove(e);
+        }
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (isResizingGrid && (e.button === 0 || e.pointerType === "touch")) {
+            resizingGrid.handleGridPointerUp(e);
+            setIsResizingGrid(false);
+            return;
+        }
+        else{
+            canvas.handlePointerUp(e);
+            setIsResizingGrid(false);
+        }
+        
+    };
+
+    useEffect(() => {
+        setCanvasSettings((prev) => ({ ...prev, gridSize: resizingGrid.reSizedGridSize, }));
+    }, [resizingGrid.reSizedGridSize]);
+
     return (
         //뷰포트
         <div
-            ref={viewportRef}
+            ref={canvas.viewportRef}
             style={{
                 position: "relative",
                 zIndex: isResizingGrid ? 10001 : "auto",
@@ -253,12 +214,10 @@ export function CanvasEditor() {
                 overscrollBehavior: "none",
                 touchAction: "none",
             }}
-
-            onMouseDown={handleMouseDown}
-            onContextMenu={handleContextMenu}
-            onMouseDownCapture={handleGridMouseDown}
-            onMouseMove={handleGridMouseMove}
-            onMouseUp={handleGridMouseUp}
+            onPointerDown={handlePointerDown}
+            onContextMenu={canvas.handleContextMenu}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
         >
 
             {image && //이미지가 있을 때만 렌더링
@@ -270,7 +229,7 @@ export function CanvasEditor() {
                         top: 0,
 
                         //useCanvas의 패닝/줌 transform 적용
-                        transform,
+                        transform: canvas.transform,
 
                         transformOrigin: "0 0",
                     }}
@@ -293,7 +252,8 @@ export function CanvasEditor() {
                             image={image ? image : null}
                         />
                         {
-                            canvasSettings.isGrid && //그리드가 있을 때만 렌더링
+                            canvasSettings.isGrid &&
+                            //그리드가 있을 때만 렌더링
                             //그리드 캔버스
                             <GridCanvas
                                 width={image.naturalWidth}
@@ -316,15 +276,15 @@ export function CanvasEditor() {
                 </div>
             }
 
-            {isResizingGrid && gridBox && (
+            {isResizingGrid && resizingGrid.gridBox && (
                 //그리드 크기 조절 중인 영역
                 <div
                     style={{
                         position: "absolute",
-                        left: gridBox.x,
-                        top: gridBox.y,
-                        width: gridBox.width,
-                        height: gridBox.height,
+                        left: resizingGrid.gridBox.x,
+                        top: resizingGrid.gridBox.y,
+                        width: resizingGrid.gridBox.width,
+                        height: resizingGrid.gridBox.height,
                         border: "2px solid #3182ce",
                         background: "rgba(49, 130, 206, 0.2)",
                         pointerEvents: "none",
@@ -340,7 +300,7 @@ export function CanvasEditor() {
                     bottom: 10,
                 }}
             >
-                {Math.round(zoom * canvasSettings.scale)}%
+                {Math.round(canvas.zoom * canvasSettings.scale)}%
             </div>
 
             {/* 리셋 버튼 */}
@@ -351,7 +311,7 @@ export function CanvasEditor() {
                     top: 10,
                 }}
                 borderRadius={10}
-                onClick={resetView}
+                onClick={canvas.resetView}
             >
                 Reset
             </Button>

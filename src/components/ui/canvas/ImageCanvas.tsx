@@ -33,6 +33,7 @@ export function ImageCanvas({ width, height, image }: ImageCanvasProps) {
             style={{
                 position: "absolute",
                 inset: 0,
+                pointerEvents: "none",
             }}
         />
     );
