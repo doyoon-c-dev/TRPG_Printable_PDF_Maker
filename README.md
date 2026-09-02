@@ -1,4 +1,4 @@
-# Image PDF Editor
+# TRPG-Printable-PDF-Maker
 
 A browser-based image and PDF editing tool that lets you prepare images for printing by adjusting margins, grids, and page layouts.
 
@@ -85,12 +85,6 @@ src/
 │       └── splitPages.ts
 └── ...
 ```
-
-## 🎯 Why I Built This
-
-I wanted to create a simple tool for preparing images for printing without having to use a full-featured image editor.
-
-The project focuses on handling image scaling, coordinate conversion, page splitting, grid alignment, and PDF generation entirely in the browser.
 
 ## 💡 Technical Highlights
 
