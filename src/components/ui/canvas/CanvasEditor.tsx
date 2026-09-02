@@ -61,23 +61,13 @@ export function CanvasEditor() {
     //이미지가 viewport보다 완전히 작아질 수 없음
     //displaySize(scaled)를 기준으로 계산해야 뷰포트에 맞게 보임
     const minZoom = useMemo(() => {
-        if (
-            displaySize.width <= 0 ||
-            displaySize.height <= 0
-        ) {
-            return 0.1;
-        }
+        if ( displaySize.width <= 0 || displaySize.height <= 0) return 0.1;
 
         const zoomX = viewportSize.width / displaySize.width;
         const zoomY = viewportSize.height / displaySize.height;
 
         return Math.min(zoomX, zoomY);
-    }, [
-        displaySize.width,
-        displaySize.height,
-        viewportSize.width,
-        viewportSize.height,
-    ]);
+    }, [ displaySize.width, displaySize.height, viewportSize.width, viewportSize.height, ]);
 
     //최대 확대 배율
     const maxZoom = useMemo(() => {
@@ -94,7 +84,8 @@ export function CanvasEditor() {
 
     //useCanvas hook을 사용하여 뷰포트 관련 상태 및 함수 가져오기
     //canvasWidth/Height는 displaySize(scaled) 기준 → 패닝 범위 계산용
-    const {
+    const 
+    {
         zoom,
         transform,
 
@@ -105,17 +96,19 @@ export function CanvasEditor() {
         //handleWheel,
 
         resetView
-        } = useCanvas({
-        viewportWidth: viewportSize.width,
-        viewportHeight: viewportSize.height,
+    } 
+        = useCanvas(
+        {
+            viewportWidth: viewportSize.width,
+            viewportHeight: viewportSize.height,
 
-        canvasWidth: displaySize.width,
-        canvasHeight: displaySize.height,
+            canvasWidth: displaySize.width,
+            canvasHeight: displaySize.height,
 
-        initialZoom: initialZoom,
-        minZoom: minZoom,
-        maxZoom: maxZoom,
-    });
+            initialZoom: initialZoom,
+            minZoom: minZoom,
+            maxZoom: maxZoom,
+        });
 
     //viewport 크기 감지
     useEffect(() => {
@@ -188,13 +181,12 @@ export function CanvasEditor() {
     };
 
     const handleCanvasPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (isResizingGrid && (e.buttons === 0 || e.pointerType === "touch")) {
+        if (isResizingGrid) {
             resizingGrid.handleGridPointerMove(e);
             return;
         }
-        else{
-            handlePointerMove(e);
-        }
+
+        handlePointerMove(e);
     };
 
     const handleCanvasPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -233,7 +225,6 @@ export function CanvasEditor() {
             onContextMenu={handleContextMenu}
             onPointerMove={handleCanvasPointerMove}
             onPointerUp={handleCanvasPointerUp}
-            //onWheel={handleWheel}
         >
 
             {image && //이미지가 있을 때만 렌더링

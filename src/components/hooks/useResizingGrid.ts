@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { DEFAULT_DPI, pxToMm } from "../utils/canvas/unit";
 
 interface Point {
@@ -28,6 +28,8 @@ export const useResizingGrid = ({ viewportSize, zoom, isResizingGrid, currentGri
     const [gridBox, setGridBox] = useState<GridBox | null>(null);
     const [reSizedGridSize, setReSizedGridSize] = useState(currentGridSize);
 
+    const isDraggingGridRef = useRef(false);
+    const dragStartRef = useRef<Point | null>(null);
 
     //마우스 좌표를 뷰포트 좌표로 변환
     //뷰포트 밖의 좌표는 0과 viewportWidth, viewportHeight 사이로 제한
@@ -78,8 +80,10 @@ export const useResizingGrid = ({ viewportSize, zoom, isResizingGrid, currentGri
 
 
         const point = getViewportPoint(event);
+        dragStartRef.current = point;
         setDragStart(point);
         setGridBox({ x: point.x, y: point.y, width: 0, height: 0 });
+        isDraggingGridRef.current = true;
         setIsDraggingGrid(true);
 
 
@@ -92,24 +96,23 @@ export const useResizingGrid = ({ viewportSize, zoom, isResizingGrid, currentGri
     // Grid 지정 중
     const handleGridPointerMove = useCallback((event: React.PointerEvent) => {
 
-        if (!isResizingGrid || !isDraggingGrid || !dragStart) return;
+        if (!isResizingGrid || !isDraggingGridRef.current || !dragStartRef.current) return;
 
         const point = getViewportPoint(event);
-        const squareBox = getSquareBox(dragStart, point);
-
+        const squareBox = getSquareBox(dragStartRef.current, point);
 
         setGridBox(squareBox);
-    }, [isResizingGrid, isDraggingGrid, dragStart, getViewportPoint, getSquareBox]);
+
+    }, [isResizingGrid, getViewportPoint, getSquareBox]);
 
 
     // Grid 지정 종료
     const handleGridPointerUp = useCallback((event: React.PointerEvent) => {
 
-        if (!isDraggingGrid || !dragStart) return;
+        if (!isDraggingGridRef.current || !dragStartRef.current) return;
 
         const point = getViewportPoint(event);
-
-        const squareBox = getSquareBox(dragStart, point);
+        const squareBox = getSquareBox(dragStartRef.current, point);
 
 
         // viewport 좌표
@@ -125,6 +128,8 @@ export const useResizingGrid = ({ viewportSize, zoom, isResizingGrid, currentGri
             setReSizedGridSize(gridSize);
         }
 
+        isDraggingGridRef.current = false;
+        dragStartRef.current = null;
         setIsDraggingGrid(false);
         setDragStart(null);
         setGridBox(null);
@@ -133,11 +138,13 @@ export const useResizingGrid = ({ viewportSize, zoom, isResizingGrid, currentGri
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
             event.currentTarget.releasePointerCapture(event.pointerId);
         }
-    }, [isDraggingGrid, dragStart, getViewportPoint, getSquareBox, zoom, isPx, setReSizedGridSize]);
+    }, [getViewportPoint, getSquareBox, zoom, isPx]);
 
 
     // Grid 지정 취소
     const cancelGridResize = useCallback(() => {
+        isDraggingGridRef.current = false;
+        dragStartRef.current = null;
         setIsDraggingGrid(false);
         setDragStart(null);
         setGridBox(null);

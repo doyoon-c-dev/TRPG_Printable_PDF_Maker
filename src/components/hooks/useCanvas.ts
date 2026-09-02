@@ -48,6 +48,21 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         return Math.sqrt(dx * dx + dy * dy);
     };
 
+    const clampOffset = useCallback((nextX: number, nextY: number, zoomValue = zoomRef.current) => {
+        const scaledWidth = canvasWidth * zoomValue;
+        const scaledHeight = canvasHeight * zoomValue;
+
+        const minX = Math.min(0, viewportWidth - scaledWidth);
+        const maxX = Math.max(0, viewportWidth - scaledWidth);
+        const minY = Math.min(0, viewportHeight - scaledHeight);
+        const maxY = Math.max(0, viewportHeight - scaledHeight);
+
+        return {
+            x: Math.min(Math.max(nextX, minX), maxX),
+            y: Math.min(Math.max(nextY, minY), maxY),
+        };
+    }, [canvasWidth, canvasHeight, viewportWidth, viewportHeight]);
+
     const zoomAtPoint = useCallback((point: Point, nextZoom: number) => {
         const currentZoom = zoomRef.current;
 
@@ -61,11 +76,13 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
             y: point.y - localY * nextZoom,
         };
 
+        const clampedOffset = clampOffset(nextOffset.x, nextOffset.y, nextZoom);
+
         zoomRef.current = nextZoom;
-        offsetRef.current = nextOffset;
-        setOffset(nextOffset);
+        offsetRef.current = clampedOffset;
+        setOffset(clampedOffset);
         setZoom(nextZoom);
-    }, []);
+    }, [clampOffset]);
 
     //Pointer Move
     const handlePointerMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
@@ -109,30 +126,23 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         const nextY = offsetStartRef.current.y + dy;
 
 
-        const currentZoom = zoomRef.current;
-        const scaledWidth = canvasWidth * currentZoom;
-        const scaledHeight = canvasHeight * currentZoom;
+        const clampedOffset = clampOffset(nextX, nextY);
 
+        offsetRef.current = clampedOffset;
+        setOffset(clampedOffset);
 
-        const minX = -scaledWidth;
-        const maxX = viewportWidth;
-
-        const minY = -scaledHeight;
-        const maxY = viewportHeight;
-
-
-        const x = Math.min(Math.max(nextX, minX), maxX);
-        const y = Math.min(Math.max(nextY, minY), maxY);
-
-        offsetRef.current = { x, y };
-        setOffset({ x, y });
-
-    }, [canvasWidth, canvasHeight, viewportWidth, viewportHeight, minZoom, maxZoom,]);
+    }, [clampOffset]);
 
     //Pointer Up
     const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLElement>) => {
 
-        if (e) pointersRef.current.delete(e.pointerId);
+        if (e) {
+            pointersRef.current.delete(e.pointerId);
+
+            if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+            }
+        }
 
         // 손가락이 하나도 없으면 pinch 종료
         if (pointersRef.current.size < 2) pinchDistanceRef.current = null;
@@ -160,6 +170,8 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
                 const points = [...pointersRef.current.values()];
                 pinchDistanceRef.current = getPinchDistance(points[0], points[1]);
             }
+
+            e.currentTarget.setPointerCapture(e.pointerId);
             e.preventDefault();
             return;
         }
@@ -171,6 +183,7 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
             isDraggingRef.current = true;
             dragStartRef.current = { x: e.clientX, y: e.clientY };
             offsetStartRef.current = { x: offsetRef.current.x, y: offsetRef.current.y };
+            e.currentTarget.setPointerCapture(e.pointerId);
             
             return;
         }
@@ -213,7 +226,7 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         return () => {
             node.removeEventListener('wheel', handleWheel);
         };
-    }, []);
+    }, [handleWheel]);
 
     //transform
     const transform = `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`;
@@ -221,12 +234,13 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
     //reset 버튼 클릭 시 실행
     //선택된 이미지가 변경될 시 실행
     const resetView = useCallback(() => {
+        const nextOffset = clampOffset(0, 0, initialZoom);
         zoomRef.current = initialZoom;
-        offsetRef.current = { x: 0, y: 0 };
+        offsetRef.current = nextOffset;
         setZoom(initialZoom);
-        setOffset({ x: 0, y: 0 });
+        setOffset(nextOffset);
 
-    }, [initialZoom, setZoom, setOffset]);
+    }, [clampOffset, initialZoom]);
 
     return {
         zoom,
