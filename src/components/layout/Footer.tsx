@@ -43,7 +43,7 @@ export function Footer() {
         {/* Links */}
         <HStack gap={4}>
           <Link
-            href="https://github.com/doyoon-c-dev/TRPG_Printable_PDF_Maker_Prod/issues"
+            href="https://github.com/doyoon-c-dev/TRPG_Printable_PDF_Maker/issues"
             target="_blank"
             rel="noopener noreferrer"
             fontSize="sm"
