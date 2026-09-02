@@ -43,7 +43,9 @@ export function Footer() {
         {/* Links */}
         <HStack gap={4}>
           <Link
-            href="#"
+            href="https://github.com/doyoon-c-dev/TRPG_Printable_PDF_Maker_Prod/issues"
+            target="_blank"
+            rel="noopener noreferrer"
             fontSize="sm"
             color="gray.600"
             _hover={{ color: "gray.900" }}
@@ -52,7 +54,9 @@ export function Footer() {
           </Link>
 
           <Link
-            href="#"
+            href="https://github.com/doyoon-c-dev"
+            target="_blank"
+            rel="noopener noreferrer"
             fontSize="sm"
             color="gray.600"
             _hover={{ color: "gray.900" }}
@@ -64,7 +68,9 @@ export function Footer() {
           </Link>
 
           <Link
-            href="#"
+            href="https://buymeacoffee.com/dydy49"
+            target="_blank"
+            rel="noopener noreferrer"
             fontSize="sm"
             color="gray.600"
             _hover={{ color: "gray.900" }}

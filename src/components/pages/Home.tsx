@@ -1,5 +1,6 @@
 import { Box, HStack, Heading, Text, VStack } from "@chakra-ui/react";
-import { Map, CircleUserRound } from "lucide-react";
+import { Map } from "lucide-react";
+import { MakingTokenDialog } from "@/components/ui/MakingTokenDialog";
 
 // 페이지 이동
 const onClickCard = (cardNumber: number) => {
@@ -81,7 +82,7 @@ export default function Home() {
         </Box>
 
         {/* Making Tokens */}
-        <Box
+        {/* <Box
           {...cardStyle}
           onClick={() => onClickCard(2)}
         >
@@ -107,7 +108,8 @@ export default function Home() {
               </Text>
             </Box>
           </VStack>
-        </Box>
+        </Box> */}
+        {MakingTokenDialog(cardStyle)}
       </HStack>
     </Box>
   );
