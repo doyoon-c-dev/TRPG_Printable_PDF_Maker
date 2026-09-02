@@ -54,12 +54,12 @@ export default function FileUploadComponent({
 
         try {
             //받아온 파일들을 이미지로 변환
-            const images = await Promise.all(
-                files.map(async (file) => {
-                    const image = await fileToImage(file);
-                    return image;
-                })
-            );
+            const images: ImageData[] = [];
+
+            for (const file of files) {
+                const image = await fileToImage(file);
+                images.push(image);
+            }
 
             //업로드된 이미지에 추가
             setUploadedImages((prev) => {
@@ -74,6 +74,7 @@ export default function FileUploadComponent({
 
                 return [...prev, ...newFiles];
             });
+
         } catch {
             toaster.create({
                 title: "File upload failed",
@@ -177,6 +178,7 @@ export default function FileUploadComponent({
                                         <LuX aria-hidden="true" />
                                     </Button>
                                     <Image
+                                        key={imgData.key}
                                         src={imgData.image.src}
                                         alt={imgData.file.name}
                                         width="100%"

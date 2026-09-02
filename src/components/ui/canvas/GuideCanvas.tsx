@@ -6,20 +6,32 @@ interface GuideCanvasProps {
     height: number;
     gridPenSize: number;
     pages: SplitPages[] | null;
+    renderScale?: number; // 최대 해상도 제한 (픽셀 단위)
 }
 
-export function GuideCanvas({ width, height, gridPenSize, pages }: GuideCanvasProps) {
+export function GuideCanvas({ width, height, gridPenSize, pages, renderScale=1 }: GuideCanvasProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    
+    const canvasWidth = Math.max(1, Math.round(width * renderScale));
+    const canvasHeight = Math.max(1, Math.round(height * renderScale));
 
     useEffect(() => {
         const canvas = canvasRef.current;
 
         if (!canvas) return;
+
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
         ctx.clearRect(0, 0, width, height);
+        ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
 
         if (!pages || pages.length <= 1) return;
 
@@ -44,7 +56,7 @@ export function GuideCanvas({ width, height, gridPenSize, pages }: GuideCanvasPr
         }
 
         ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
-        ctx.lineWidth = gridPenSize * 2;
+        ctx.lineWidth = gridPenSize * 2 * renderScale;
         ctx.stroke();
 
     }, [width, height, pages, gridPenSize]);
@@ -58,6 +70,8 @@ export function GuideCanvas({ width, height, gridPenSize, pages }: GuideCanvasPr
                 position: "absolute",
                 inset: 0,
                 pointerEvents: "none",
+                width: `${width}px`,
+                height: `${height}px`,
             }}
         />
     );

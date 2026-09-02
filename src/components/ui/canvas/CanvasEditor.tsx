@@ -17,6 +17,7 @@ export function CanvasEditor() {
 
     const viewportRef = useRef<HTMLDivElement>(null);
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+    const MAX_CANVAS_SIZE = 2048; // 최대 캔버스 크기 제한 (픽셀 단위)
 
     //context에서 가져오기
     const { selectedImage } = useImageContext();
@@ -38,6 +39,15 @@ export function CanvasEditor() {
             height: image.naturalHeight * scaleFactor,
         };
     }, [image, scaleFactor]);
+
+
+    const renderScale = useMemo(() => {
+        if (!image) return 1;
+
+        const maxDimension = Math.max( image.naturalWidth, image.naturalHeight );
+        return Math.min(1, MAX_CANVAS_SIZE / maxDimension);
+        
+    }, [image]);
 
 
     //단위 변환 (mm → px)
@@ -257,6 +267,7 @@ export function CanvasEditor() {
                             width={image.naturalWidth}
                             height={image.naturalHeight}
                             image={image ? image : null}
+                            renderScale = {renderScale}
                         />
                         {
                             canvasSettings.isGrid &&
@@ -268,6 +279,7 @@ export function CanvasEditor() {
                                 gridSize={gridSize}
                                 gridPenColor={canvasSettings.gridPenColor}
                                 gridPenSize={canvasSettings.gridPenSize / scaleFactor}
+                                renderScale = {renderScale}
                             />
                         }
 
@@ -277,6 +289,7 @@ export function CanvasEditor() {
                             height={image.naturalHeight}
                             gridPenSize={canvasSettings.gridPenSize / scaleFactor}
                             pages={pages}
+                            renderScale = {renderScale}
                         />
 
                     </div>
