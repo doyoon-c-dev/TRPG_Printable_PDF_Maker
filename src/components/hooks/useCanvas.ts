@@ -250,8 +250,6 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         handlePointerMove,
         handlePointerUp,
         handleContextMenu,
-        //handleWheel,
-
         resetView,
     };
 }

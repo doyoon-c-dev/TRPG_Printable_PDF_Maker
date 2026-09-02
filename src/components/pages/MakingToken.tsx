@@ -1,4 +1,4 @@
-import { Box, Heading, Stack, Text } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { useState } from "react";
 import FileUploadComponent from "@/components/ui/file-upload";
 import type { ImageData } from "@/components/utils/fileToImage";
