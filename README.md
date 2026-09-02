@@ -1,75 +1,178 @@
-# React + TypeScript + Vite
+# TRPG-Printable-PDF-Maker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based image and PDF editing tool that lets you prepare images for printing by adjusting margins, grids, and page layouts.
 
-Currently, two official plugins are available:
+**Live Demo:** [Vercel deployment URL]
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+* 🖼️ **Image Upload**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+  * Upload images using drag & drop
+  * Support multiple images
+  * Preserve the original image aspect ratio
 
-## Expanding the ESLint configuration
+* 🔍 **Canvas Preview**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+  * Zoom and pan the image
+  * Interactive canvas-based preview
+  * Real-time preview of editing settings
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* 📐 **Grid**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+  * Add a customizable grid to the image
+  * Adjust grid size, line color, and line width
+  * Align image dimensions with the selected grid size
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+* 📄 **Page Splitting**
 
+  * Split large images across multiple pages
+  * A4 paper size support
+  * Configure individual margins
+  * Preview page boundaries before exporting
+
+* 📑 **PDF Export**
+
+  * Generate multi-page PDFs from images
+  * Preserve the configured page layout and margins
+  * Export PDFs directly from the browser
+
+* ⚡ **Web Worker**
+
+  * Move PDF generation work off the main thread
+  * Reduce UI blocking during heavy PDF processing
+
+* 💬 **Feedback**
+
+  * Submit feedback and bug reports through GitHub Issues
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* React
+* TypeScript
+* Vite
+* Chakra UI
+
+### Image & PDF Processing
+
+* HTML Canvas API
+* jsPDF
+* PDF processing libraries
+* Web Workers
+
+### Deployment
+
+* Vercel
+
+## 🏗️ Project Structure
+
+```text
+src/
+├── components/
+├── hooks/
+│   └── useCanvas.ts
+├── context/
+├── utils/
+│   ├── canvas/
+│   │   ├── crop.ts
+│   │   ├── drawGrid.ts
+│   │   ├── drawImage.ts
+│   │   └── margin.ts
+│   └── pdf/
+│       ├── exportPdf.ts
+│       └── splitPages.ts
+└── ...
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 💡 Technical Highlights
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Canvas-based Image Editing
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The editor uses multiple canvas layers to separate responsibilities such as image rendering, grids, and page boundaries.
 
+This allows each layer to be updated independently while keeping the preview responsive.
+
+### Image Scaling & Coordinate Conversion
+
+The preview size and the original image size can differ significantly.
+
+Instead of modifying the original image resolution for display, the editor converts coordinates between the displayed image and the original image when performing operations such as cropping and page splitting.
+
+This helps maintain the original image quality when exporting the final PDF.
+
+### Grid-aligned Page Splitting
+
+Images are split according to the printable area of the selected paper size and configured margins.
+
+The image dimensions are adjusted so that the resulting pages align with the selected grid size.
+
+### Background PDF Processing
+
+PDF generation can involve processing large images and multiple pages.
+
+Web Workers are used to move expensive processing away from the main UI thread and keep the interface responsive during PDF generation.
+
+## 🚀 Getting Started
+
+### Requirements
+
+* Node.js
+* npm
+
+### Installation
+
+```bash
+git clone https://github.com/USERNAME/REPOSITORY.git
+
+cd REPOSITORY
+
+npm install
 ```
+
+### Development
+
+```bash
+npm run dev
+```
+
+The development server will start at:
+
+```text
+http://localhost:5173
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+## 📦 Deployment
+
+This project is deployed using Vercel.
+
+Every push to the main branch can trigger a new deployment through the connected GitHub repository.
+
+## 🔒 Privacy
+
+Images are processed locally in the browser.
+
+The application does not require users to upload their images to a backend server for image editing or PDF generation.
+
+## 📬 Feedback
+
+Found a bug or have an idea for improvement?
+
+Please leave feedback through the project's GitHub Issues page.
+
+## ☕ Support
+
+If you find this project useful and would like to support my work, you can buy me a coffee.
+
+Your support helps me continue learning, building, and sharing new projects.
+
+## 📄 License
+
+This project is currently for personal and educational purposes.
