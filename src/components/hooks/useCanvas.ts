@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface Point {
     x: number;
@@ -32,9 +32,6 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         offsetRef.current = offset;
     }, [offset]);
 
-    //viewport DOM
-    const viewportRef = useRef<HTMLDivElement>(null);
-
     //Pan
     const isDraggingRef = useRef(false);                    //드래그 중인지 상태 여부
     const dragStartRef = useRef<Point>({ x: 0, y: 0 });     //드래그 시작할 때의 마우스 좌표값
@@ -43,12 +40,32 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
     //Pinch Zoom
     const pointersRef = useRef<Map<number, Point>>(new Map());
     const pinchDistanceRef = useRef<number | null>(null);
+    
 
     const getPinchDistance = (a: Point, b: Point) => {
         const dx = a.x - b.x;
         const dy = a.y - b.y;
         return Math.sqrt(dx * dx + dy * dy);
     };
+
+    const zoomAtPoint = useCallback((point: Point, nextZoom: number) => {
+        const currentZoom = zoomRef.current;
+
+        if (currentZoom <= 0) return;
+
+        const localX = (point.x - offsetRef.current.x) / currentZoom;
+        const localY = (point.y - offsetRef.current.y) / currentZoom;
+
+        const nextOffset = {
+            x: point.x - localX * nextZoom,
+            y: point.y - localY * nextZoom,
+        };
+
+        zoomRef.current = nextZoom;
+        offsetRef.current = nextOffset;
+        setOffset(nextOffset);
+        setZoom(nextZoom);
+    }, []);
 
     //Pointer Move
     const handlePointerMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
@@ -62,43 +79,23 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
             isDraggingRef.current = false;
 
             const points = [...pointersRef.current.values()];
-
             const [a, b] = points;
             const currentDistance = getPinchDistance(a, b);
-
             const previousDistance = pinchDistanceRef.current;
 
-            if (previousDistance !== null) {
+            if (previousDistance !== null && previousDistance > 0) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const centerX = (a.x + b.x) / 2 - rect.left;
+                const centerY = (a.y + b.y) / 2 - rect.top;
+
                 const scale = currentDistance / previousDistance;
+                const currentZoom = zoomRef.current;
+                const nextZoom = Math.min(Math.max(currentZoom * scale, minZoom), maxZoom);
 
-                const viewport = viewportRef.current;
-
-                if (viewport) {
-
-                    const rect = viewport.getBoundingClientRect();
-
-                    // 두 손가락의 중심점
-                    const centerX = (a.x + b.x) / 2 - rect.left;
-                    const centerY = (a.y + b.y) / 2 - rect.top;
-
-                    setZoom(prevZoom => {
-
-                        const nextZoom = Math.min(Math.max(prevZoom * scale, minZoom), maxZoom);
-                        const actualScale = nextZoom / prevZoom;
-
-                        // 손가락 중심을 기준으로 확대/축소
-                        setOffset(prevOffset => ({
-                            x: centerX - (centerX - prevOffset.x) * actualScale,
-                            y: centerY - (centerY - prevOffset.y) * actualScale,
-                        }));
-
-                        return nextZoom;
-                    });
-                }
+                zoomAtPoint({ x: centerX, y: centerY }, nextZoom);
             }
 
             pinchDistanceRef.current = currentDistance;
-
             return;
         }
 
@@ -127,10 +124,10 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         const x = Math.min(Math.max(nextX, minX), maxX);
         const y = Math.min(Math.max(nextY, minY), maxY);
 
-
+        offsetRef.current = { x, y };
         setOffset({ x, y });
 
-    }, [canvasWidth, canvasHeight, viewportWidth, viewportHeight, zoom, minZoom, maxZoom,]);
+    }, [canvasWidth, canvasHeight, viewportWidth, viewportHeight, minZoom, maxZoom,]);
 
     //Pointer Up
     const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLElement>) => {
@@ -192,51 +189,31 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
         e.preventDefault();
         e.stopPropagation();
 
-        const viewport = viewportRef.current;
-
-        if (!viewport) return;
-
-        const rect = viewport.getBoundingClientRect();
+        const rect = (e?.currentTarget as HTMLElement)?.getBoundingClientRect();
+        if(!rect) return;
 
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
         const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+        const currentZoom = zoomRef.current;
+        const nextZoom = Math.min(Math.max(currentZoom * zoomFactor, minZoom), maxZoom);
 
-        setZoom(prevZoom => {
-
-            const nextZoom = Math.min(Math.max(prevZoom * zoomFactor, minZoom), maxZoom);
-
-            const scale = nextZoom / prevZoom;
-
-
-            setOffset(prevOffset => ({
-                x: mouseX - (mouseX - prevOffset.x) * scale,
-                y: mouseY - (mouseY - prevOffset.y) * scale,
-            }));
+        zoomAtPoint({ x: mouseX, y: mouseY }, nextZoom);
+    }, [minZoom, maxZoom, zoomAtPoint]);
 
 
-            return nextZoom;
-        });
 
-    }, [minZoom, maxZoom]);
+    useLayoutEffect(() => {
+        const node = document.getElementById("canvas-container");
+        if (!node) return;
 
-    //Native Wheel Event
-    useEffect(() => {
+        node.addEventListener('wheel', handleWheel, { passive: false });
 
-        //viewport Dom 받아옴
-        const viewport = viewportRef.current;
-        if (!viewport) return;
-
-        //네이티브 이벤트 등록 //passive : false로 해야 preventDefault 가능
-        viewport.addEventListener("wheel", handleWheel, { passive: false });
-
-        //handleWheel이 변경되면 wheel이벤트 제거
         return () => {
-            viewport.removeEventListener("wheel", handleWheel);
+            node.removeEventListener('wheel', handleWheel);
         };
-
-    }, [handleWheel]);
+    }, []);
 
     //transform
     const transform = `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`;
@@ -244,26 +221,22 @@ export function useCanvas({ viewportWidth, viewportHeight, canvasWidth, canvasHe
     //reset 버튼 클릭 시 실행
     //선택된 이미지가 변경될 시 실행
     const resetView = useCallback(() => {
-
         zoomRef.current = initialZoom;
         offsetRef.current = { x: 0, y: 0 };
         setZoom(initialZoom);
         setOffset({ x: 0, y: 0 });
 
-    }, [initialZoom]);
+    }, [initialZoom, setZoom, setOffset]);
 
     return {
-        viewportRef,
-
         zoom,
-        setZoom,
-
         transform,
 
         handlePointerDown,
         handlePointerMove,
         handlePointerUp,
         handleContextMenu,
+        //handleWheel,
 
         resetView,
     };

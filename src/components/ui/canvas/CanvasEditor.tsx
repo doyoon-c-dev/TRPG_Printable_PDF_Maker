@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { useCanvas } from "@/components/hooks/useCanvas";
 import { ImageCanvas } from "@/components/ui/canvas/ImageCanvas";
 import { GridCanvas } from "@/components/ui/canvas/GridCanvas";
@@ -14,6 +14,8 @@ import { useResizingGrid } from "@/components/hooks/useResizingGrid";
 
 export function CanvasEditor() {
 
+
+    const viewportRef = useRef<HTMLDivElement>(null);
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
 
     //context에서 가져오기
@@ -25,21 +27,6 @@ export function CanvasEditor() {
 
     //scale 비율 (0~100 → 0.0~1.0)
     const scaleFactor = canvasSettings.scale * 0.01;
-
-    //viewport 크기 감지
-    useEffect(() => {
-        if (!canvas.viewportRef.current) return;
-
-        const observer = new ResizeObserver(([entry]) => {
-            const { width, height } = entry.contentRect;
-
-            setViewportSize({ width, height });
-        });
-
-        observer.observe(canvas.viewportRef.current);
-
-        return () => observer.disconnect();
-    }, []);
 
     //viewport에 표시될 크기 = 원본 × scale
     //useCanvas에 전달하여 뷰포트 패닝/줌 기준으로 사용
@@ -107,7 +94,18 @@ export function CanvasEditor() {
 
     //useCanvas hook을 사용하여 뷰포트 관련 상태 및 함수 가져오기
     //canvasWidth/Height는 displaySize(scaled) 기준 → 패닝 범위 계산용
-    const canvas = useCanvas({
+    const {
+        zoom,
+        transform,
+
+        handlePointerDown,
+        handlePointerMove,
+        handlePointerUp,
+        handleContextMenu,
+        //handleWheel,
+
+        resetView
+        } = useCanvas({
         viewportWidth: viewportSize.width,
         viewportHeight: viewportSize.height,
 
@@ -119,12 +117,28 @@ export function CanvasEditor() {
         maxZoom: maxZoom,
     });
 
-    const resizingGrid = useResizingGrid({ viewportSize, zoom: canvas.zoom, isResizingGrid, currentGridSize: gridSize, isPx: canvasSettings.isPx, });
+    //viewport 크기 감지
+    useEffect(() => {
+        const viewport = viewportRef.current;
+        if (!viewport) return;
+
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+
+            setViewportSize({ width, height });
+        });
+
+        observer.observe(viewport);
+
+        return () => observer.disconnect();
+    }, [viewportRef]);
+
+    const resizingGrid = useResizingGrid({ viewportSize, zoom: zoom, isResizingGrid, currentGridSize: gridSize, isPx: canvasSettings.isPx, });
 
     //이미지나 이미지 스케일 변경 시 뷰포트 초기화
     useEffect(() => {
-        canvas.resetView();
-    }, [image, displaySize.width, displaySize.height, canvas.resetView]);
+        resetView();
+    }, [image, displaySize.width, displaySize.height, canvasSettings.scale, resetView]);
 
     //페이지 분할 (원본 좌표계 기준)
     //splitPages가 반환하는 page 좌표도 원본 기준이므로
@@ -152,14 +166,14 @@ export function CanvasEditor() {
         if (pages) setPages(pages);
     }, [pages, setPages]);
 
-    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const handleCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         if(e.pointerType === "touch"){
             if(isResizingGrid){
                 resizingGrid.handleGridPointerDown(e);
                 return;
             }
             else{
-                canvas.handlePointerDown(e);
+                handlePointerDown(e);
             }
         }
 
@@ -169,28 +183,28 @@ export function CanvasEditor() {
         }
         
         if(e.button === 2 || !isResizingGrid){
-            canvas.handlePointerDown(e);
+            handlePointerDown(e);
         }
     };
 
-    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const handleCanvasPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
         if (isResizingGrid && (e.buttons === 0 || e.pointerType === "touch")) {
             resizingGrid.handleGridPointerMove(e);
             return;
         }
         else{
-            canvas.handlePointerMove(e);
+            handlePointerMove(e);
         }
     };
 
-    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const handleCanvasPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
         if (isResizingGrid && (e.button === 0 || e.pointerType === "touch")) {
             resizingGrid.handleGridPointerUp(e);
             setIsResizingGrid(false);
             return;
         }
         else{
-            canvas.handlePointerUp(e);
+            handlePointerUp(e);
             setIsResizingGrid(false);
         }
         
@@ -198,12 +212,13 @@ export function CanvasEditor() {
 
     useEffect(() => {
         setCanvasSettings((prev) => ({ ...prev, gridSize: resizingGrid.reSizedGridSize, }));
-    }, [resizingGrid.reSizedGridSize]);
+    }, [resizingGrid.reSizedGridSize, setCanvasSettings]);
 
     return (
         //뷰포트
         <div
-            ref={canvas.viewportRef}
+            id="canvas-container"
+            ref={viewportRef}
             style={{
                 position: "relative",
                 zIndex: isResizingGrid ? 10001 : "auto",
@@ -214,10 +229,11 @@ export function CanvasEditor() {
                 overscrollBehavior: "none",
                 touchAction: "none",
             }}
-            onPointerDown={handlePointerDown}
-            onContextMenu={canvas.handleContextMenu}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
+            onPointerDown={handleCanvasPointerDown}
+            onContextMenu={handleContextMenu}
+            onPointerMove={handleCanvasPointerMove}
+            onPointerUp={handleCanvasPointerUp}
+            //onWheel={handleWheel}
         >
 
             {image && //이미지가 있을 때만 렌더링
@@ -229,7 +245,7 @@ export function CanvasEditor() {
                         top: 0,
 
                         //useCanvas의 패닝/줌 transform 적용
-                        transform: canvas.transform,
+                        transform: transform,
 
                         transformOrigin: "0 0",
                     }}
@@ -300,7 +316,7 @@ export function CanvasEditor() {
                     bottom: 10,
                 }}
             >
-                {Math.round(canvas.zoom * canvasSettings.scale)}%
+                {Math.round(zoom * canvasSettings.scale)}%
             </div>
 
             {/* 리셋 버튼 */}
@@ -311,7 +327,7 @@ export function CanvasEditor() {
                     top: 10,
                 }}
                 borderRadius={10}
-                onClick={canvas.resetView}
+                onClick={resetView}
             >
                 Reset
             </Button>
