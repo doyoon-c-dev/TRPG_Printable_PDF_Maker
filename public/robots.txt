@@ -1,0 +1,6 @@
+```txt
+User-agent: *
+Allow: /
+
+Sitemap: https://trpg-printable-pdf-maker.vercel.app/sitemap.xml
+```
