@@ -13,8 +13,8 @@ export const router = createBrowserRouter([
 
     children: [
       {
-        index: true,
-        element: <Home />,
+        path: "",
+        element: <Home/>,
       },
       {
         path: "making-map",

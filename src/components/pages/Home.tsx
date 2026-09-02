@@ -1,18 +1,7 @@
 import { Box, HStack, Heading, Text, VStack } from "@chakra-ui/react";
 import { Map } from "lucide-react";
 import { MakingTokenDialog } from "@/components/ui/MakingTokenDialog";
-
-// 페이지 이동
-const onClickCard = (cardNumber: number) => {
-  switch (cardNumber) {
-    case 1:
-      window.location.href = "/making-map";
-      break;
-    case 2:
-      window.location.href = "/making-token";
-      break;
-  }
-};
+import { useNavigate } from "react-router-dom";
 
 const cardStyle = {
   as: "button" as const,
@@ -46,6 +35,21 @@ const cardStyle = {
 };
 
 export default function Home() {
+
+  // 페이지 이동
+  const navigate = useNavigate();
+
+  const onClickCard = (cardNumber: number) => {
+    switch (cardNumber) {
+      case 1:
+        navigate("/making-map");
+        break;
+      case 2:
+        navigate("/making-token");
+        break;
+    }
+  };
+
   return (
     <Box
       minH="calc(100vh - 80px)"
