@@ -21,13 +21,14 @@ export function ImageCanvas({ width, height, image, renderScale=1 }: ImageCanvas
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
 
         if (!image) return;
 
         ctx.drawImage(image, 0, 0, width, height);
-    }, [image, width, height]);
+    }, [image, width, height, renderScale, canvasWidth, canvasHeight]);
 
     return (
         <canvas

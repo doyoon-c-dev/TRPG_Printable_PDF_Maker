@@ -59,13 +59,13 @@ export function GuideCanvas({ width, height, gridPenSize, pages, renderScale=1 }
         ctx.lineWidth = gridPenSize * 2 * renderScale;
         ctx.stroke();
 
-    }, [width, height, pages, gridPenSize]);
+    }, [width, height, pages, gridPenSize, renderScale, canvasWidth, canvasHeight]);
 
     return (
         <canvas
             ref={canvasRef}
-            width={width}
-            height={height}
+            width={canvasWidth}
+            height={canvasHeight}
             style={{
                 position: "absolute",
                 inset: 0,

@@ -44,8 +44,8 @@ export function GridCanvas({ width, height, gridSize, gridPenColor, gridPenSize,
     return (
         <canvas
             ref={canvasRef}
-            width={width}
-            height={height}
+            width={canvasWidth}
+            height={canvasHeight}
             style={{
                 position: "absolute",
                 inset: 0,
