@@ -39,6 +39,9 @@ export default function FileUploadComponent({
 
         if (!setSelectedImage || !setUploadedImages) return;
 
+        const imageToDelete = uploadedImages.find((image) => image.key === key);
+        if (imageToDelete) URL.revokeObjectURL(imageToDelete.objectUrl);
+
         if (selectedImage?.key === key) {
             setSelectedImage(null);
         }
@@ -64,13 +67,17 @@ export default function FileUploadComponent({
             //업로드된 이미지에 추가
             setUploadedImages((prev) => {
                 const existingFiles = new Set(prev.map(({ key }) => key));
-                const newFiles = images.filter(({ key }) => {
+                    const newFiles = images.filter(({ key }) => {
 
                     //이미 중복된 파일이 있다면 추가하지 않음
                     if (existingFiles.has(key)) return false;
                     existingFiles.add(key);
                     return true;
                 });
+
+                    images.forEach((image) => {
+                        if (!newFiles.includes(image)) URL.revokeObjectURL(image.objectUrl);
+                    });
 
                 return [...prev, ...newFiles];
             });

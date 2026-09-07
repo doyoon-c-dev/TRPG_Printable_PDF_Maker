@@ -7,6 +7,7 @@ import { type CanvasSettings } from "@/components/context/canvasContext";
 
 interface MakePdfOptions {
     image: HTMLImageElement;
+    imageScale: number;
     option: CanvasSettings
     pages: SplitPages[];
 }
@@ -17,7 +18,7 @@ export interface MadePdf {
 }
 
 
-export function makePdf({ image, option, pages }: MakePdfOptions): MadePdf | null {
+export function makePdf({ image, imageScale, option, pages }: MakePdfOptions): MadePdf | null {
 
     //단위 변환
     const toMm = (value: number) => option.isPx ? pxToMm(value, DEFAULT_DPI) : value;
@@ -60,7 +61,7 @@ export function makePdf({ image, option, pages }: MakePdfOptions): MadePdf | nul
         printableHeightMm <= 0
     ) return null;
 
-    const actualGridSize = toPx(option.gridSize) / scaleFactor;
+    const actualGridSize = (toPx(option.gridSize) / scaleFactor) * imageScale;
 
     let previewUrl = "";
 
@@ -72,12 +73,16 @@ export function makePdf({ image, option, pages }: MakePdfOptions): MadePdf | nul
         }
 
         //이미지 자르기 (page 좌표는 원본 기준)
+        const sourceX = Math.round(page.sourceX * imageScale);
+        const sourceY = Math.round(page.sourceY * imageScale);
+        const sourceWidth = Math.round(page.sourceWidth * imageScale);
+        const sourceHeight = Math.round(page.sourceHeight * imageScale);
         const croppedImage = crop(image,
             {
-                sourceX: page.sourceX,
-                sourceY: page.sourceY,
-                sourceWidth: page.sourceWidth,
-                sourceHeight: page.sourceHeight
+                sourceX,
+                sourceY,
+                sourceWidth,
+                sourceHeight
             });
 
         //그리드 그리기
@@ -98,8 +103,8 @@ export function makePdf({ image, option, pages }: MakePdfOptions): MadePdf | nul
         }
 
         //출력 크기 계산 (원본 px → scaled px → mm)
-        const outputWidthMm = toMm(croppedImage.width * scaleFactor);
-        const outputHeightMm = toMm(croppedImage.height * scaleFactor);
+        const outputWidthMm = toMm(page.sourceWidth * scaleFactor);
+        const outputHeightMm = toMm(page.sourceHeight * scaleFactor);
 
         //PDF에 이미지 추가
         pdf.addImage(

@@ -3,7 +3,7 @@ import { ImageContext } from "@/components/context/imageContext";
 import { PdfContext, type GeneratedPdf } from "@/components/context/pdfContext";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { type CanvasSettings } from "@/components/context/canvasContext";
-import { type ImageData } from "@/components/utils/fileToImage";
+import { loadOriginalImage, type ImageData } from "@/components/utils/fileToImage";
 import { PDFDocument } from "pdf-lib";
 import type { SplitPages } from "../utils/canvas/splitPages";
 import { makePdf } from "../utils/canvas/makePdf";
@@ -49,9 +49,13 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
 
   //deletePdf나 useCallback에서 오래된 state 사용하지 않도록 ref 생성
   const generatedPdfsRef = useRef(generatedPdfs);
+  const uploadedImagesRef = useRef(uploadedImages);
   useEffect(() => {
     generatedPdfsRef.current = generatedPdfs;
   }, [generatedPdfs]);
+  useEffect(() => {
+    uploadedImagesRef.current = uploadedImages;
+  }, [uploadedImages]);
 
   //true : pdf생성 혹은 merge download 중
   const [isLoading, setIsLoading] = useState(false);
@@ -70,8 +74,11 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
       //상태 변경 직후 로딩 UI를 그릴 시간을 줌
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
+      const originalImage = await loadOriginalImage(selectedImage.file);
+      const previewScale = originalImage.naturalWidth / selectedImage.image.naturalWidth;
       const result = makePdf({
-        image: selectedImage.image,
+        image: originalImage,
+        imageScale: previewScale,
         option: canvasSettings,
         pages: pages
       });
@@ -198,6 +205,7 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
           URL.revokeObjectURL(pdf.previewUrl);
         }
       });
+      uploadedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.objectUrl));
     };
   }, []);
 
