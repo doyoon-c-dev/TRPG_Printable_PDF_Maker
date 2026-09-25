@@ -9,11 +9,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [react()],
   server: {
+<<<<<<< Updated upstream
     port : 3000,
     proxy : {
       "/api" : {
         target: 'http://localhost:8080',
         changeOrigin: true,
+=======
+    port: 3000,
+    proxy: {
+      '/api':{
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+>>>>>>> Stashed changes
       }
     }
   },
