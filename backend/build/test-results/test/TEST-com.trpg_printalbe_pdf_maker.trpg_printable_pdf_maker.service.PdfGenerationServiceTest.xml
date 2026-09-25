@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.trpg_printalbe_pdf_maker.trpg_printable_pdf_maker.service.PdfGenerationServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-25T09:48:14.841Z" hostname="DESKTOP-734S56A" time="0.215">
+  <properties/>
+  <testcase name="generatesPdfAndPreviewFromAnImage()" classname="com.trpg_printalbe_pdf_maker.trpg_printable_pdf_maker.service.PdfGenerationServiceTest" time="0.214"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
