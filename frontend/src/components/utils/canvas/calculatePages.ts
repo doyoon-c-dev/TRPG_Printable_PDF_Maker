@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import axios from "axios";
 import type { SplitPages } from "./splitPages";
 
 export interface CalculatePagesOptions {
@@ -14,8 +14,8 @@ export async function calculatePages(
     options: CalculatePagesOptions,
     signal?: AbortSignal,
 ): Promise<SplitPages[]> {
-    const response = await apiClient.post<SplitPages[]>(
-        "/pages/calculate",
+    const response = await axios.post<SplitPages[]>(
+        "/api/pages/calculate",
         options,
         { signal },
     );

@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import axios from "axios";
 import type { CanvasSettings } from "@/components/context/canvasContext";
 
 interface MakePdfOptions {
@@ -49,8 +49,8 @@ export async function makePdf({
         ], { type: "application/json" }),
     );
 
-    const response = await apiClient.post<GeneratedPdfResponse>(
-        "/pdfs/generate",
+    const response = await axios.post<GeneratedPdfResponse>(
+        "/api/pdfs/generate",
         formData,
     );
 

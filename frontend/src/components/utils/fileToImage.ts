@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import axios from "axios";
 
 export interface ImageData {
     key: string;
@@ -37,8 +37,8 @@ export async function fileToImage(file: File): Promise<ImageData> {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await apiClient.post(
-            "/images/process",
+        const response = await axios.post(
+            "/api/images/process",
             formData,
             {
                 responseType: "blob",
