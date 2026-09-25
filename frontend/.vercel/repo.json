@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_OMpOnzaiuDVGCMGtxgeN2SUsiOsR",
+      "name": "trpg-printable-pdf-maker",
+      "directory": ".",
+      "orgId": "team_LbJZiIrZdFzwghUWpUhjdi2T"
+    }
+  ]
+}
