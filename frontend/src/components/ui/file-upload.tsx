@@ -5,7 +5,6 @@ import { useDropzone } from "react-dropzone";
 import { LuX, LuCheck } from "react-icons/lu";
 import { fileToImage, type ImageData } from "@/components/utils/fileToImage";
 import { toaster } from "@/components/ui/toaster";
-import axios from "axios";
 
 interface FileUploadComponentProps {
     selectedImage?: ImageData | null;
@@ -20,14 +19,6 @@ export default function FileUploadComponent({
     uploadedImages = [],    //업로드된 이미지
     setUploadedImages,      //업로드된 이미지 추가
 }: FileUploadComponentProps = {}) {
-
-    const processImage = async(file:File) => {
-        const formData = new FormData();
-
-        const response = await axios.post("/api/images/process", formData, {responseType : "blob"},);
-
-        return URL.createObjectURL(response.data);
-    }
 
     //이미지 클릭
     //선택된 이미지를 변경 혹은 해제

@@ -57,6 +57,4 @@ export function HelpTooltip({ children }: HelpTooltipProps) {
             </Tooltip.Root>
         </span>
     );
-
-    );
 }
