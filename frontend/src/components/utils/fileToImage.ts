@@ -105,4 +105,5 @@ export async function fileToImage(file: File): Promise<ImageData> {
     } catch {
         throw new Error("이미지를 불러오지 못했습니다.");
     }
+
 }

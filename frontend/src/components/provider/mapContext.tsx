@@ -3,7 +3,7 @@ import { ImageContext } from "@/components/context/imageContext";
 import { PdfContext, type GeneratedPdf } from "@/components/context/pdfContext";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { type CanvasSettings } from "@/components/context/canvasContext";
-import { type ImageData } from "@/components/utils/fileToImage";
+import { loadOriginalImage, type ImageData } from "@/components/utils/fileToImage";
 import { PDFDocument } from "pdf-lib";
 import type { SplitPages } from "../utils/canvas/splitPages";
 import { makePdf } from "../utils/canvas/makePdf";
@@ -79,6 +79,9 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
         file: selectedImage.file,
         imageWidth: selectedImage.image.naturalWidth,
         imageHeight: selectedImage.image.naturalHeight,
+        option: canvasSettings,
+      });
+
         option: canvasSettings,
       });
 

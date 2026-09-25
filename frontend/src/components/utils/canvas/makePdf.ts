@@ -11,6 +11,7 @@ interface MakePdfOptions {
 interface GeneratedPdfResponse {
     pdfBase64: string;
     previewBase64: string;
+
 }
 
 export interface MadePdf {
@@ -58,3 +59,4 @@ export async function makePdf({
         previewUrl: `data:image/png;base64,${response.data.previewBase64}`,
     };
 }
+

@@ -2,6 +2,7 @@ import { Tooltip } from "@chakra-ui/react";
 import { CircleHelp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+
 interface HelpTooltipProps {
     children: React.ReactNode;
 }
@@ -55,5 +56,7 @@ export function HelpTooltip({ children }: HelpTooltipProps) {
                 </Tooltip.Positioner>
             </Tooltip.Root>
         </span>
+    );
+
     );
 }
