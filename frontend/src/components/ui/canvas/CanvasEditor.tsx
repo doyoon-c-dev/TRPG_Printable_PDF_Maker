@@ -3,7 +3,7 @@ import { useCanvas } from "@/components/hooks/useCanvas";
 import { ImageCanvas } from "@/components/ui/canvas/ImageCanvas";
 import { GridCanvas } from "@/components/ui/canvas/GridCanvas";
 import { GuideCanvas } from "@/components/ui/canvas/GuideCanvas";
-import { splitPages } from "@/components/utils/canvas/splitPages";
+import { calculatePages } from "@/components/utils/canvas/calculatePages";
 
 import { useImageContext } from "@/components/hooks/useImageContext";
 import { useCanvasContext } from "@/components/hooks/useCanvasContext";
@@ -17,11 +17,11 @@ export function CanvasEditor() {
 
     const viewportRef = useRef<HTMLDivElement>(null);
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
-    const MAX_CANVAS_SIZE = 2048; // 최대 캔버스 크기 제한 (픽셀 단위)
+    const MAX_CANVAS_SIZE = 4096; // 표시용 캔버스 최대 크기 (픽셀 단위)
 
     //context에서 가져오기
     const { selectedImage } = useImageContext();
-    const { canvasSettings, setPages, isResizingGrid, setIsResizingGrid, setCanvasSettings } = useCanvasContext();
+    const { canvasSettings, pages, setPages, isResizingGrid, setIsResizingGrid, setCanvasSettings } = useCanvasContext();
 
     //ImgData에서 image만 가져오기
     const image = selectedImage?.image;
@@ -45,7 +45,8 @@ export function CanvasEditor() {
         if (!image) return 1;
 
         const maxDimension = Math.max( image.naturalWidth, image.naturalHeight );
-        return Math.min(1, MAX_CANVAS_SIZE / maxDimension);
+        const devicePixelRatio = typeof window === "undefined" ? 1 : window.devicePixelRatio;
+        return Math.min(devicePixelRatio, MAX_CANVAS_SIZE / maxDimension);
         
     }, [image]);
 
@@ -62,6 +63,7 @@ export function CanvasEditor() {
     const gridSize = toPx(canvasSettings.gridSize) / scaleFactor;
     const paperWidth = toPx(canvasSettings.paperWidth) / scaleFactor;
     const paperHeight = toPx(canvasSettings.paperHeight) / scaleFactor;
+    const gridPenSizePx = canvasSettings.gridPenSize;
 
     //margin을 제외한 실제 이미지 표시 영역 (원본 좌표계)
     const printableWidth = paperWidth - marginRight - marginLeft;
@@ -71,26 +73,22 @@ export function CanvasEditor() {
     //이미지가 viewport보다 완전히 작아질 수 없음
     //displaySize(scaled)를 기준으로 계산해야 뷰포트에 맞게 보임
     const minZoom = useMemo(() => {
-        if ( displaySize.width <= 0 || displaySize.height <= 0) return 0.1;
+        if (displaySize.width <= 0 || displaySize.height <= 0) return 0.1;
 
         const zoomX = viewportSize.width / displaySize.width;
         const zoomY = viewportSize.height / displaySize.height;
 
         return Math.min(zoomX, zoomY);
-    }, [ displaySize.width, displaySize.height, viewportSize.width, viewportSize.height, ]);
+    }, [displaySize.width, displaySize.height, viewportSize.width, viewportSize.height]);
 
     //최대 확대 배율
-    const maxZoom = useMemo(() => {
-        return minZoom * 4;
-    }, [minZoom]);
+    const maxZoom = useMemo(() => minZoom * 4, [minZoom]);
 
     //초기 확대 배율
-    //초기에는 제일 작은 배율로 설정
     const initialZoom = useMemo(() => {
         if (!image) return 1;
         return minZoom;
-    }, [image, minZoom])
-
+    }, [image, minZoom]);
 
     //useCanvas hook을 사용하여 뷰포트 관련 상태 및 함수 가져오기
     //canvasWidth/Height는 displaySize(scaled) 기준 → 패닝 범위 계산용
@@ -143,31 +141,42 @@ export function CanvasEditor() {
         resetView();
     }, [image, displaySize.width, displaySize.height, canvasSettings.scale, resetView]);
 
-    //페이지 분할 (원본 좌표계 기준)
-    //splitPages가 반환하는 page 좌표도 원본 기준이므로
-    //makePdf.ts에서 별도 변환 없이 바로 사용 가능
-    const pages = useMemo(() => {
+    //페이지 분할 좌표는 백엔드에서 계산한다.
+    useEffect(() => {
+        if (!image) {
+            queueMicrotask(() => setPages([]));
+            return;
+        }
 
-        if (!image) return null;
+        const controller = new AbortController();
 
-        return splitPages({
-
+        calculatePages({
             imageWidth: image.naturalWidth,
             imageHeight: image.naturalHeight,
-
             gridSize,
-
             printableWidth,
             printableHeight,
-
             isGrid: canvasSettings.isGrid,
-        });
+        }, controller.signal)
+            .then((calculatedPages) => {
+                setPages(calculatedPages);
+            })
+            .catch((error: unknown) => {
+                if (!controller.signal.aborted) {
+                    setPages([]);
+                    console.error("페이지 계산에 실패했습니다.", error);
+                }
+            });
 
-    }, [image, gridSize, printableWidth, printableHeight, canvasSettings.isGrid]);
-
-    useEffect(() => {
-        if (pages) setPages(pages);
-    }, [pages, setPages]);
+        return () => controller.abort();
+    }, [
+        canvasSettings.isGrid,
+        gridSize,
+        image,
+        printableHeight,
+        printableWidth,
+        setPages,
+    ]);
 
     const handleCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         if(e.pointerType === "touch"){
@@ -278,7 +287,7 @@ export function CanvasEditor() {
                                 height={image.naturalHeight}
                                 gridSize={gridSize}
                                 gridPenColor={canvasSettings.gridPenColor}
-                                gridPenSize={canvasSettings.gridPenSize / scaleFactor}
+                                gridPenSize={gridPenSizePx / scaleFactor}
                                 renderScale = {renderScale}
                             />
                         }
@@ -287,7 +296,7 @@ export function CanvasEditor() {
                         <GuideCanvas
                             width={image.naturalWidth}
                             height={image.naturalHeight}
-                            gridPenSize={canvasSettings.gridPenSize / scaleFactor}
+                            gridPenSize={gridPenSizePx / scaleFactor}
                             pages={pages}
                             renderScale = {renderScale}
                         />

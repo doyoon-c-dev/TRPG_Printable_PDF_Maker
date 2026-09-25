@@ -70,7 +70,7 @@ export const MapButtons = () => {
 
     //단위 변경 함수
     //isPx가 true이면 mm -> px, false이면 px -> mm
-    //isPx가 변경되면 모든 숫자 값을 변환
+    //펜 두께(gridPenSize)는 항상 px이므로 단위 전환에서 제외한다.
     const handleIsPxCange = () => {
         const isPx = !canvasSettings.isPx;
         const change = (value: number) => isPx ? Math.round(mmToPx(value, 300)) : Math.round(pxToMm(value, 300) * 10) / 10;
@@ -189,7 +189,7 @@ export const MapButtons = () => {
 
                 </Field.Root>
 
-                {field("Pen Size(px)", numberInput("gridPenSize", canvasSettings.gridPenSize, 1, 30, 1))}
+                {field("Pen Size (px, fixed)", numberInput("gridPenSize", canvasSettings.gridPenSize, 1, 30, 1))}
 
                 {/* 단위 */}
                 <GridItem colSpan={2} mt={5}>

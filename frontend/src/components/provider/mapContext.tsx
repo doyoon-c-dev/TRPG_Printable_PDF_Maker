@@ -3,10 +3,11 @@ import { ImageContext } from "@/components/context/imageContext";
 import { PdfContext, type GeneratedPdf } from "@/components/context/pdfContext";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { type CanvasSettings } from "@/components/context/canvasContext";
-import { loadOriginalImage, type ImageData } from "@/components/utils/fileToImage";
+import { type ImageData } from "@/components/utils/fileToImage";
 import { PDFDocument } from "pdf-lib";
 import type { SplitPages } from "../utils/canvas/splitPages";
 import { makePdf } from "../utils/canvas/makePdf";
+import { toaster } from "../ui/toaster";
 
 export function MapContextProvider({ children }: { children: ReactNode }) {
 
@@ -74,13 +75,11 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
       //상태 변경 직후 로딩 UI를 그릴 시간을 줌
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-      const originalImage = await loadOriginalImage(selectedImage.file);
-      const previewScale = originalImage.naturalWidth / selectedImage.image.naturalWidth;
-      const result = makePdf({
-        image: originalImage,
-        imageScale: previewScale,
+      const result = await makePdf({
+        file: selectedImage.file,
+        imageWidth: selectedImage.image.naturalWidth,
+        imageHeight: selectedImage.image.naturalHeight,
         option: canvasSettings,
-        pages: pages
       });
 
       if (!result) return;
@@ -92,12 +91,20 @@ export function MapContextProvider({ children }: { children: ReactNode }) {
         previewUrl: result.previewUrl,                //preview 이미지
         createdAt: Date.now(),
       }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Please check the image and PDF settings.";
+      toaster.create({
+        title: "PDF creation failed",
+        description: message,
+        type: "error",
+        duration: 5000,
+      });
     } finally {
       //로딩 종료
       setIsLoading(false);
       setLoadingMessage("");
     }
-  }, [canvasSettings, pages, selectedImage]);
+  }, [canvasSettings, selectedImage]);
 
   //pdf리스트에서 pdf 삭제
   //useCallback -> 최초 생성 후 재사용

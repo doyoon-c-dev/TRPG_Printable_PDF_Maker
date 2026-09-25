@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { LuX, LuCheck } from "react-icons/lu";
 import { fileToImage, type ImageData } from "@/components/utils/fileToImage";
 import { toaster } from "@/components/ui/toaster";
+import axios from "axios";
 
 interface FileUploadComponentProps {
     selectedImage?: ImageData | null;
@@ -19,6 +20,14 @@ export default function FileUploadComponent({
     uploadedImages = [],    //업로드된 이미지
     setUploadedImages,      //업로드된 이미지 추가
 }: FileUploadComponentProps = {}) {
+
+    const processImage = async(file:File) => {
+        const formData = new FormData();
+
+        const response = await axios.post("/api/images/process", formData, {responseType : "blob"},);
+
+        return URL.createObjectURL(response.data);
+    }
 
     //이미지 클릭
     //선택된 이미지를 변경 혹은 해제
@@ -144,10 +153,16 @@ export default function FileUploadComponent({
                                     position="relative"
                                     border={isSelected ? "3px solid lightblue" : "3px solid lightgray"}
                                     borderRadius={15}
+                                    display="flex"
                                     justifyContent="center"
-                                    alignItems="flex-end"
+                                    alignItems="center"
                                     width="150px"
-                                    height="auto"
+                                    minWidth="150px"
+                                    maxWidth="150px"
+                                    height="150px"
+                                    minHeight="150px"
+                                    maxHeight="150px"
+                                    flexShrink={0}
                                     flexDirection="column"
                                     gap="2px"
                                     p="5px"
@@ -165,6 +180,7 @@ export default function FileUploadComponent({
                                             p="2px"
                                             color="white"
                                             aria-hidden="true"
+                                            justifyContent="center"
                                         >
                                             <LuCheck size={12} />
                                         </Box>
@@ -188,11 +204,12 @@ export default function FileUploadComponent({
                                         key={imgData.key}
                                         src={imgData.image.src}
                                         alt={imgData.file.name}
-                                        width="100%"
-                                        height="auto"
+                                        width="auto"
+                                        maxWidth="100%"
+                                        height="110px"
                                         objectFit="contain"
                                     />
-                                    <Text fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{imgData.file.name}</Text>
+                                    <Text width="100%" textAlign="center" fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{imgData.file.name}</Text>
                                 </Box>
                             );
                         })}
