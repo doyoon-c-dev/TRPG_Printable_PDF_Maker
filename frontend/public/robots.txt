@@ -2,5 +2,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://trpg-printable-pdf-maker.vercel.app/sitemap.xml
+Sitemap: https://trpg-printable-pdf-maker.com/sitemap.xml
 ```

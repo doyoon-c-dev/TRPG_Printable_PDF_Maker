@@ -3,14 +3,14 @@
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
 >
   <url>
-    <loc>https://trpg-printable-pdf-maker.vercel.app/</loc>
+    <loc>https://trpg-printable-pdf-maker.com</loc>
   </url>
 
   <url>
-    <loc>https://trpg-printable-pdf-maker.vercel.app/making-map</loc>
+    <loc>https://trpg-printable-pdf-maker.com/making-map</loc>
   </url>
 
   <url>
-    <loc>https://trpg-printable-pdf-maker.vercel.app/making-token</loc>
+    <loc>https://trpg-printable-pdf-maker.com/making-token</loc>
   </url>
 </urlset>
