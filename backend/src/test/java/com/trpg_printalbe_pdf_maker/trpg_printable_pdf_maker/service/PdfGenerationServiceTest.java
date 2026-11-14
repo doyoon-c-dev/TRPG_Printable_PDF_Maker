@@ -1,12 +1,15 @@
 package com.trpg_printalbe_pdf_maker.trpg_printable_pdf_maker.service;
 
 import org.junit.jupiter.api.Test;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.mock.web.MockMultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,5 +52,9 @@ class PdfGenerationServiceTest {
 
         assertThat(result.pdfBase64()).isNotBlank();
         assertThat(result.previewBase64()).isNotBlank();
+
+                try (PDDocument document = Loader.loadPDF(Base64.getDecoder().decode(result.pdfBase64()))) {
+                        assertThat(document.getNumberOfPages()).isEqualTo(1);
+                }
     }
 }
